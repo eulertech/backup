@@ -1,0 +1,95 @@
+---
+title: "Random Walk Test"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+This is a test if the price of Brent is a random walk.
+"If a market is weak-form efficient then the change in a security's price, with respect to the security's historical price changes, is approximately random because the historical price changes are already reflected in the current price. This is why randomness tests are typically used to test the weak-form efficient market hypothesis."
+
+Source: http://www.turingfinance.com/testing-the-efficient-market-hypothesis-with-r/
+
+
+Read in the monthly Brent price
+```{r}
+library(ggplot2)
+library(Quandl)
+library(lmtest)
+library(vrtest)
+library(quantmod)
+
+# dataFrame <- read.csv("~/EAA_Analytics/Data/BrentPrice.csv")
+dataFrame <- read.csv("C:/GitRepos/EAA_Analytics/Data/BrentPrice.csv")
+colnames(dataFrame) <- c("date", "BrentPrice")
+head(dataFrame)
+
+yVar <- dataFrame$BrentPrice
+yVarDiff <- diff(yVar, differences = 1)
+date <- as.Date(dataFrame$date, format = "%m/%d/%Y")
+
+yVarLag <- Lag(yVar, 1)[,1]
+yVarReturn <- (yVar/yVarLag - 1)
+
+```
+
+
+Read in other commodities and equities from Quandl
+```{r}
+goldDf <- Quandl("FRED/GOLDAMGBD228NLBM")
+```
+
+Plot the data
+```{r}
+plot(x = date,
+     y = yVar,
+     type = "l",
+     ylab = "Price ($)",
+     xlab = "Date",
+     main = "Nominal Brent Price")
+lines(yVarDiff)
+```
+
+
+ACF: Look for a slow decay in the series
+Note the persistence and slow decay of the lags in the ACF due to a random walk or a long range dependence.
+
+```{r}
+acf(yVar, 100)
+pacf(yVar, 100)
+
+acf(yVarDiff, 100)
+pacf(yVarDiff, 100)
+```
+
+
+Phillips-Perron unit root test (null hypothesis is that the variable contains unit root, and the alternative is the variable is a stationary process)
+With a p-value of 0.3878 We cannot reject the null, hence the process is not stationary
+```{r}
+PP.test(yVarLag)
+```
+
+
+Breusch-Godfrey test for autocorrelation: 
+```{r}
+
+
+```
+
+
+Cummulative distribution function of the level and returns
+```{r}
+plot(ecdf(yVar))
+plot(ecdf(yVarReturn))
+```
+
+
+Complementary Cummulative distribution function of the level
+```{r}
+plot(ecdf(yVar))
+```
+
+
+
+
+```

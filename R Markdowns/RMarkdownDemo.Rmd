@@ -1,0 +1,285 @@
+---
+title: "RMarkdownDemo"
+author: "liang kuang"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    depth: 3
+    number_sections: true ## if you want number sections at each table header
+    theme: united
+bibliography: 'C:\Users\mfp53502\Documents\Work\R\learning_example\example.bib'
+---
+
+---
+# Load the packages
+```{r load_libs}
+suppressPackageStartupMessages({
+library(knitr)
+library(pander)
+library(dygraphs)
+library(zoo)
+library(Quandl)
+library(ggplot2)
+})
+```
+
+# R Markdown Layout
+![](C:\Users\mfp53502\Documents\Work\R\learning_example\RMarkdownLayout.png)
+
+# Global settings
+
+Before writing your RMarkdown document, user can specify the global settings for the global environment. For example, setting whether to echo your R code and show the code/results etc. in the document. You can either set the options globally or for individual code blocks.
+
+```
+## global setting for all blocks
+
+{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+## setting for individual code block
+
+{r chuck_name, echo = FALSE, results = "hide", include = TRUE}
+x <- rnorm(100)
+y <- 2*x + rnorm(100)
+```
+If you want all the figures take the same amount of space, use the following commands:
+```
+{r global_options, include = FALSE}
+knitr::opts_chunk$set(fig.width = 12, fig.height = 8, fig.path = 'Figs/',
+                      echo = FALSE, warning = FALSE, message = FALSE)
+# While setting figure path, the '/' is very import.                      
+```
+Also, you can individually change the settings for your figure windows. This will overwrite global settings.  This is very convenient especially when you have images for different data size.  For example, by specifying 'fig.with' and 'fig.height':
+```
+{r scatterplot, fig.width = 8, fig.height = 6}
+plot(x,y)
+```
+
+# Create Paragraphs With Styles
+## Headers
+```
+# Header 1
+## Header 2
+### Header 3
+```
+## Lists
+### Unordered List
+```
+* Item 1
+* Item 2
+    + Item 2a
+    + Item 2b
+```
+This is the example output for Unordered Lists:
+
+* Item 1
+* ITem 2
+    + Item 2a
+    + Item 2b
+    
+### Ordered List
+```
+1. Item 1
+2. Item 2
+3. Item 3
+    + Item 3a
+    + Item 3b
+```
+This is the example output for ordered list:
+
+1. Item 1
+2. Item 2
+3. Item 3
+    + Item 3a
+    + Item 3b
+
+## Emphasis
+
+From time to time, we might want to emphasize our text either using `{**bold**}` or `{*italic*}`. 
+Also, we can change the text color by using styles. We can say roses are <span style="color:red">red</span>, violets are <span style="color:blue">blue</span> by using command `<span style="color:red">red</span>` and `<span style="color:blue">blue</span> repsectively.`
+
+# Embed code chunk, inline code and run R code
+## R Code Chunks
+R code will be evaluated and printed
+
+```{r eval = TRUE}
+size = 750
+x = as.data.frame(matrix(runif(14*size),ncol=14))
+head(x)
+```
+
+## Embed Code Chunk
+In RMarkdown, we can symply embed a chunk of code by using 
+```
+x = matrix(runif(14*size),ncol=14)
+y = 10 * sin(pi*x[,1]*x[,2]) + 20*(x[,3]-0.5)**2 + 10*x[,4] + 5*x[,5] + runif(1,0,1)
+x[,11:14] = x[,1:4] + matrix(runif(4*size,min = 0, max = 0.025),ncol=4)
+```
+
+## Inline Code
+Inline code can be excecuted using two plus two equals `r 2+2` using 
+``` two plus two equals `r 2 + 2` ```
+
+# Generate R Graphics and Table
+```{r graphics}
+data=data.frame(value=rnorm(10000))
+# Basic histogram
+ggplot(data, aes(x=value)) + geom_histogram()
+# Custom Binning. I can just give the size of the bin
+ggplot(data, aes(x=value)) + geom_histogram(binwidth = 0.05)
+# Uniform color
+ggplot(data, aes(x=value)) + 
+    geom_histogram(binwidth = 0.2, color="white", fill=rgb(0.2,0.7,0.1,0.4) ) 
+# Proportional color
+ggplot(data, aes(x=value)) + 
+    geom_histogram(binwidth = 0.2, aes(fill = ..count..) )
+
+```
+
+# Embed images, hyperlink, and advanced items (animation, interactive maps etc.) 
+Images on the web or local files in the same directory:
+```
+![](http://example.com/logo.png)
+![optional caption text](figures/img.png)
+```
+![IHS Markit](https://cdn.ihs.com/wwwihsmarkit/images/IHS-Markit-logo.svg)
+
+# Embed Mathematic Equations
+There are two ways to embed equations using LaTex format: inline equation and block equations. 
+
+## Inline Equation 
+This is an example of inline equation using \$ quotes.
+```$10sin(\pi x_1x_2)$```  ==> $10sin(\pi x_1x_2)$
+
+## Display Equations
+This is an example of display equations using \$$ quotes.
+``` $$y = 10sin(\pi x_1x_2) + 20(x_3-0.5)^2 + 10x_4+5x_5+\epsilon$$ ```=>
+  $$y = 10sin(\pi x_1x_2) + 20(x_3-0.5)^2 + 10x_4+5x_5+\epsilon$$
+  
+# Tables
+R Markdown can also create simple tables very easily by following syntax:
+```
+First Header | Second Header
+------------ | -------------
+Content Cell | Content Cell
+Content Cell | Content Cell
+Content Cell | Content Cell
+Reference Style Links and Images
+```
+Here is an example output:
+
+Name | Age | Hobby | Location
+-----|-----|-----------------
+Jack | 22  | Travel| DC
+Adam | 33  | Movie | Los Angelas
+Judy | 25  | Party | New York
+
+  
+# Auto Cite References
+In RMarkdown, we can also easily cite our references by coupling with reference managers. For example:
+Application written in the R programming language [@RCoreTeam] using the Shiny framework [@Tutorialspoint2015].
+
+# Advanced Features
+RMarkdown can also embed advanced objects into its HTML output: video, interactive graphics etc.
+Here are some examples of the advanced features:
+
+## Interactive graphs 
+### Interactive time series
+
+```{r advanced features}
+brent <- Quandl("EIA/PET_RBRTE_D", collapse="monthly", type="ts")
+dygraph(brent, main = "Brent Spot Prices") %>% dyRangeSelector() %>% 
+  dyAxis("y", label = "US $/Barrel") %>%
+  dySeries("V1", label = "Brent ($/Barrel)") %>%
+  dyLegend(show = "follow")
+```
+
+### GeoSpatial Visualization
+```{r demo2}
+library(leaflet)
+m <- leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addMarkers(lng=-77.003, lat=38.9, popup="IHS MARKIT")
+m  # Print the map
+```
+
+### rbokeh
+```{r bokeh}
+library(rbokeh)
+figure() %>%
+  ly_points(Sepal.Length, Sepal.Width, data = iris,
+    color = Species, glyph = Species,
+    hover = list(Sepal.Length, Sepal.Width))
+```
+
+
+
+### networkViz
+```{r demo3}
+library(visNetwork)
+nodes <- data.frame(id = 1:6, title = paste("node", 1:6), 
+                    shape = c("dot", "square"),
+                    size = 10:15, color = c("blue", "red"))
+edges <- data.frame(from = 1:5, to = c(5, 4, 6, 3, 3))
+visNetwork(nodes, edges) %>%
+  visOptions(highlightNearest = TRUE, nodesIdSelection = TRUE)
+
+```
+
+### plotly
+```{r plotly}
+library(ggplot2)
+library(plotly)
+p <- ggplot(data = diamonds, aes(x = cut, fill = clarity)) +
+            geom_bar(position = "dodge")
+ggplotly(p)
+```
+
+### networkD3
+```{r network}
+# Load data
+library(networkD3)
+data(MisLinks)
+data(MisNodes)
+
+# Plot
+forceNetwork(Links = MisLinks, Nodes = MisNodes,
+            Source = "source", Target = "target",
+            Value = "value", NodeID = "name",
+            Group = "group", opacity = 0.8)
+```
+
+```{r radialNetwork}
+URL <- paste0(
+        "https://cdn.rawgit.com/christophergandrud/networkD3/",
+        "master/JSONdata//flare.json")
+
+## Convert to list format
+Flare <- jsonlite::fromJSON(URL, simplifyDataFrame = FALSE)
+
+# Use subset of data for more readable diagram
+Flare$children = Flare$children[1:3]
+
+radialNetwork(List = Flare, fontSize = 10, opacity = 0.9)
+
+diagonalNetwork(List = Flare, fontSize = 10, opacity = 0.9)
+
+
+```
+
+```{r dendroNetwork}
+hc <- hclust(dist(USArrests), "ave")
+
+dendroNetwork(hc, height = 600)
+```
+
+##Video
+```{r, echo = TRUE}
+htmltools::includeHTML("embed_video_Rmarkdown.html")
+```
+
+# REFERENCES
+
+

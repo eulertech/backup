@@ -1,0 +1,212 @@
+---
+title: "Granger_causality_TY"
+author: "liang kuang"
+date: "March 30, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+* * *
+## Introduction
+**Causality** is the agency of efficacy that connects one process (the cause) with another process or state (the effect), where the first is understood to be partly repsonsible for the second, and the second is dependent on the first. In gegeral, a process has many causes, which are said to be causal factors for it, and all lie in its past. An effect can in turn be a cause of many other effects. 
+
+The **Granger causality** is a statistical hypothesis test for determing whether one time series is useful in forecasting another. A time series **X** is said to Granger-cause **Y** if it can be shown that those **X** values provide statistically significant information about future values of **Y** through a series of t-tests and F-tests on lagged values of **X**.
+* * *
+## Principle and theory
+
+### Principle
+There are two underlying principles:
+1. The cause happens prior to its effect.
+2. THe cause has unique information about the future values of its effect. 
+
+$$P[Y(t+1) \in A | I(t)] \neq P[Y(t+1) \in I_{-X}(t)]$$
+where P referes to probability, A is an arbitrary non-empty set and I(t) and $I_{-X}(t)$ respectively denote the information available as of time t in the entire universe, and that in the modified universe in which X is executed. If the above hypothesis is accepted, we say that X Granger-causes Y. 
+
+### Mathmatical statement and null hypothesis
+Let y and x be stationary time series. To test null hypothesis that x does not Granger-cause y, one first finds the proper lagged values of y to include in a univariate autoregression of y:
+$$y_t = a_0 + a_1y_{t-1} + a_2y_{t-2} + ... + a_my_{t-m} +error_t$$
+next, the autoregression is augmented by including lagged values of x:
+$$y_t = a_0 + a_1y_{t-1} + a_2y_{t-2} + ... + a_my_{t-m} +error_t + b_px_{t-p}+...+b_qx_{t-q}+error_t.$$
+The null hypothesis that x does not Granger-cause y is not rejected **f and only** if no lagged values of x are retained in the regression.
+
+### Multivariate analysis (conditionaly Granger causality test)
+Multivariate Granger causality analysis is usually performed by fitting a vector autoregressive model (VAR) to the time series. 
+$$X(t) = \sum_{\tau=1}^{L}{A_\tau X(t-\tau) + \epsilon(t)}$$
+where $\epsilon(t)$ is a white Gaussian random vector and $A_\tau$ is a mtrix for every $\tau$.
+If at least one of $A_\tau(j,i)$ for $\tau = 1 ... L$ is significantly larger than zero (in absolute value), $X_i$ is called Granger causes of another time series $X_j$.
+
+### F-statistic
+The test is usually done in Wald or F test.
+
+$$F = \frac{\frac{RSS_1-RSS_2}{P_2-P_1}}{\frac{RSS_2}{n-p_2}}$$
+The null hypothesis (model 2 is not better than model 1) is rejected if the F calculated from the data is greater than the critical value of the F-distribution for some desired false-rejection probability (e.g. 0.05). The F-test is a Wald test. 
+
+
+* * * 
+
+In the following example, a granger-causality test using the Toda-Yamamoto method are implemented.
+ref: https://www.christophpfeiffer.org/2012/11/07/toda-yamamoto-implementation-in-r/
+
+The recommended steps:
+  * 1. find the integration order I(k) using ndiffs 
+  * 2. select optimal lag order p(1...m) using VARselect which may return more than one,max =4 values
+  * 3. Build the VAR model, do serial.test on the VAR.p models and select the one with the most serial correlation for VAR models
+  * 4. Build an augumented VAR (p+k)
+  * 5. Run causality test from VARS model
+  * 6. Save the two-way pairwise results to an dataframe
+
+
+```{r}
+library(fUnitRoots)
+library(urca)
+library(vars)
+library(aod)
+library(zoo)
+library(tseries)
+```
+
+###Load data
+```{r}
+cof <- read.csv("coffee_data.csv", header=T,sep=";")
+names(cof)
+#Adjust Date format
+cof["Date"]<-paste(sub("M","-",cof$Date),"-01",sep="")
+```
+```{r}
+#Visualize
+plot(as.Date(cof$Date),cof$Arabica,type="l",col="black",lwd=2)
+lines(as.Date(cof$Date),cof$Robusta,col="blue",lty=2,lwd=1)
+legend("topleft",c("Arabica","Robusta"),col=c("black","blue"),lty=c(1,2),lwd=c(2,1),bty="n")
+```
+
+##Possible structural break in 1970s. Therefore only values from 1976:01 onwards are regarded
+
+```{r}
+cof1<-cof[193:615,]
+```
+
+```{r}
+#Visualize
+plot(as.Date(cof1$Date),cof1$Arabica,type="l",col="black",lwd=2,ylim=range(cof1$Robusta))
+lines(as.Date(cof1$Date),cof1$Robusta,col="blue",lty=2,lwd=1)
+legend("topright",c("Arabica","Robusta"),col=c("black","blue"),lty=c(1,2),lwd=c(2,1),bty="n")
+```
+
+```{r}
+#Test for unit roots
+summary(ur.df(cof$Arabica))
+```
+
+```{r}
+#Test for unit roots
+summary(ur.df(cof$Robusta))
+```
+
+```{r}
+#Test for unit root using kpss
+summary(ur.kpss(cof$Arabica))
+summary(ur.kpss(cof$Arabica))
+```
+
+```{r}
+
+ur.df(diff(cof$Arabica,1))
+ur.df(diff(cof$Robusta,1))
+```
+
+```{r}
+ur.kpss(diff(cof$Arabica,1))
+ur.kpss(diff(cof$Robusta,1))
+```
+
+### Since first order differencing eliminates the unit root, the maximum order of integration is concluded to be I(1).
+
+##Set up VAR-Model
+##select lag order // either 2 or 6
+```{r}
+VARselect(cof1[,2:3],lag=20,type="both")
+```
+
+```{r}
+##VAR Model, lag=2
+V.2<-VAR(cof1[,2:3],p=2,type="both")
+st <- serial.test(V.2)
+str(st)
+```
+
+
+```{r}
+##VAR-Model, lag=6
+V.6<-VAR(cof1[,2:3],p=6,type="both")
+serial.test(V.6)
+```
+```{r}
+#Stability analysis
+1/roots(V.6)[[1]] # ">1"
+1/roots(V.6)[[2]] # ">1"
+```
+```{r}
+#Alternative stability analyis
+plot(stability(V.6)) ## looks fine
+```
+
+### Model with p=6 is less likely to be serially correlated. Thus model with p=6 is selected. 
+
+## Model with additional lag is set up. 
+```{r}
+V.7<-VAR(cof1[,2:3],p=7,type="both")
+V.7$varresult
+summary(V.7)
+```
+* * *
+
+##Wald-test (H0: Robusta does not Granger-cause Arabica)
+```{r}
+wald.test(b=coef(V.7$varresult[[1]]), Sigma=vcov(V.7$varresult[[1]]), Terms=c(2,4,6,8,10,12))
+```
+### Could not be rejected (X2=8.6; p=0.2)
+
+##Wald.test (H0: Arabica does not Granger-cause Robusta)
+```{r}
+wald.test(b=coef(V.7$varresult[[2]]), Sigma=vcov(V.7$varresult[[2]]), Terms= c(1,3,5,7,9,11))
+```
+### Could be rejected at 10% (X2=12.3; p=0.056)
+
+# It seems that Arabica Granger-causes Robusta prices, but not the other way around.   
+
+* * *
+# Discussion with alternative
+## While using the causality function from library {vars},the granger causality test shows slightly different results but reach same statistical conclusion.  
+```{r}
+# use causality function under vars
+causality(V.7,'Robusta')
+```
+## H0: Robusta do not Granger-cause Arabica will not be rejected since p-value > 0.1 at 10%. So Robusta does not Granger-cause Arabica.
+
+
+```{r}
+# use causality function under vars
+causality(V.7,'Arabica')
+```
+
+## H0: Arabica do not Granger-cause Robusta will be rejected at 10% (p = 0.07). Same conclusion as using Wald-test for Granger test.  
+
+
+```{r}
+# test for var(6) which does not count the cointegration
+causality(V.6,'Robusta')
+```
+## Robusta do not Granger-cause Arabica
+
+```{r}
+# test for var(6)
+causality(V.6,'Arabica')
+```
+
+## Arabica do not Granger-cause Robusta at 10% with p-value(0.109). 
+
+* * *
+# The order of integration can have some impact on the granger causality test as seen from the difference between var(6) and var(7).

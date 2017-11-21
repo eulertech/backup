@@ -1,0 +1,212 @@
+---
+title: "Overview of BSTS and Prophet"
+author: "Mihaela Solcan"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(CausalImpact)
+library(prophet)
+```
+
+Load the packages
+```{r}
+library(CausalImpact)
+library(prophet)
+```
+Read in the data used to test the functions in Prophet and BSTS: 
+
+```{r}
+setwd("C:/Users/mfp43003/Desktop/EAA/data/")
+
+dt<-(xlsx::read.xlsx("test.xlsx", sheetName = "data", colIndex = 3:8,startRow = 16,endRow = 232, header=T))
+oil.h <- data.frame(ds = seq(as.Date('1999-02-01'), as.Date('2017-01-01'), by = 'm'), y = dt[,"oil"])
+```
+
+##Model with Prophet
+```{r}
+history <- data.frame(ds = seq(as.Date('1999-02-01'), as.Date('2014-11-01'), by = 'm'), y = dt[1:190,"oil"])
+m <- prophet(df=history, growth="linear",seasonality.prior.scale=10, weekly.seasonality = TRUE,
+             changepoint.prior.scale = 0.5)
+
+```
+
+Create data frame to store the forecasts
+```{r}
+future <- make_future_dataframe(m, periods = 27, freq="month")
+```
+
+Compute the forecasts using the predict function from the "forecast" package
+```{r}
+forecast <- predict(m, future)
+tail(forecast[c('ds', 'yhat', 'yhat_lower', 'yhat_upper')])
+```
+
+Plot the forecasts 
+
+```{r pressure, echo=FALSE}
+plot(forecast$ds,forecast$yhat,ylim=range(dt[,"oil"]),type="l", col=3,main="Out-of-sample WTI forecasts with Prophet", 
+     ylab="Log (WTI price index)", xlab="Time")
+lines(oil.h, type="l", ylab="",xlab="")
+legend("topleft",c("Prophet fit/forecasts","Observed"), col=c(3,1), lwd=2)
+```
+
+
+##BSTS Package 
+
+Bayesian Structural Time Series (BSTS) are state-space (ss) models for time-series data, which can be defined by two equations: 
+
+(1)$$y_{t} = Z_{t}\alpha_{t} + \epsilon_{t}$$
+(2)$$\alpha_{t+1} = T_{t}\alpha_{t} + R_{t}\nu_{t}$$
+
+Equation (1) links the observed data on the target variable $y_{t}$ (aka observation equation) to a latent state vector $\alpha_{t}$ through time represented by the state equation (2). 
+
+SS model are popular choices for modeling time-series because they are very flexible (a large class of models can e written in ss form) and modular (the latent state can be assembled from a series of sub-components that capture important features of the data: trends, seasonality, linear regression...).
+
+In a classical regression the unknown parameters are the regression coefficients, which are estimated. In ss models the unknown parameters are the mean and the variance of the observed time series. 
+
+
+###Steps in specifying the ss model: 
+
+####1. Specify the **target variable y** (time series) as a numeric vector
+
+```{r}
+y <- dt[1:190,"oil"]
+y_obs <-dt [191:216,"oil"]
+```
+
+####2. Prepare the **exogenous variables**
+
+```{r}
+exog_fit<-ts(dt[1:190,-2], start=c(1999,2), freq=12)
+exog_forcs<-ts(dt[191:216,-2], start=c(2014,12),freq=12)
+```
+
+
+####3. Components of the state:
++ Specify a **trend component** (a local linear trend). This is the equivalent of the intercept in a classical regression, however, in a state space system, this intercept is allowed to change from period to period.
+The level component can be allowed to be fixed (i.e. a global level) and applicable to all periods of the sample. 
+
+
+   
+   + Mathematically, the defaults specification of the local linear trend assumes that both the mean and the slope of the trend are specified as random walks:
+   $$\mu_{t+1}=\mu_{t} + \delta_{t} +\nu_{\mu,t}$$
+   $$\delta_{t+1} = \delta_{t} +\nu_{\delta,t}$$
+   
+   where $\mu_{t}$ represents the value of the trend at time $t$ and $\delta_{t}$ represents the change in the level of the trend between time periods (or the slope of the trend). 
+   
+ + This specification of the local linear trend model captures *short term changes* in the target variable. For a *long-run analysis*, a more robust trend model that allows for shifts in the slope of the local linear trend is handled by assuming the errors of the model follow the Student T distribution as opposed to the Normal distribution and specifies the slope is assumed to be stationary around a long-term slope D: 
+      $$\delta_{t+1}=D + \rho(\delta_{t}-D)+\nu_{\delta,t}$$
+   Where, $|\rho|<1$ is the rate at which the trend is updated. 
+   In BSTS, the long-run time-varying local linear trend is specified by the following function:  
+
+```{r}
+ss <- AddStudentLocalLinearTrend(list(),y)
+```
+
+ + Add a **seasonality component** via seasonal dummies: 
+```{r}
+ss <- AddSeasonal(ss, y, nseasons = 12)
+```
+
++ Add the regression component to capture the impact of the exogenous variables on the target variable. Estimate the BSTS model using a Markov Chain Monte Carlo (MCMC) algorithm for 5000 iterations and discarded the first 1000 as burn in.  
+
+The drivers can be specified with time-varying or static coefficients. In this example, I used static coefficeints. 
+
+```{r}
+model <- bsts(y~., state.specification = ss, data=exog_fit, niter = 5000)
+```
+
+ + Plot the top coefficients associated with the top drivers included in the BSTS model
+
+```{r}
+plot(model, "coefficients")
+```
+
+###Generate forecasts
+
+The BSTS system generates average forecasts by combining the predictions from a large set of models that have different combinations of potential drivers. 
+
+
+```{r}
+pred <- predict(model, horizon = nrow(exog_forcs), newdata=exog_forcs, burn = 1000)
+```
+
+Plot the forecast
+
+```{r}
+x2<-append(y,pred$mean,after=length(y))
+comp <- ts(data.frame(forcs=x2, actual = dt[,"oil"]),start=c(1999,2),freq=12)
+
+ts.plot(comp, main="Out-of-sample WTI forecasts with BSTS", col=c(3,1), ylab="Log (WTI)")
+legend("topleft",col=c(3,1),lty=1,legend=c("Forecasts","Observed"))
+```
+
+
+####Bayesian estimation: priors/likelihoods/posteriors for the regression coefficients
+
+
+Bayesian analysis relies on Bayes' theorem: 
+
+$$prior \times likelohood \propto posterior$$
+A prior distribution on the regression coefficients can be combined with actual data (likelihood) to generate a posterior distribution. Even with diffuse (i.e. not very informative) priors, the analysis works if we have enough observations: 
+
+```{r,echo=FALSE}
+n = 10
+N = 10
+theta = .2
+x = rbinom(n,N,theta)
+grid = seq(0,2,.01)
+
+alpha = c(.5)
+beta = c(.5)
+
+plot(grid,grid,,type="n",xlim=c(0,1),ylim=c(0,15),xlab="",ylab="Density",xaxs="i",yaxs="i",
+       main="Prior and Posterior Distribution")
+  
+  alpha.star = alpha + sum(x)
+  beta.star = beta + n*N - sum(x)
+  prior = dbeta(grid,alpha,beta)
+  post = dbeta(grid,alpha.star,beta.star)
+  
+  lines(grid,post,lwd=2, col=2)
+  lines(grid,prior,lwd=2, col=3)
+  legend("topright",c("Posterior","Prior"),lwd=2, col=c(2,3))
+  
+```
+
+##Causal Impact
+
+The package generalizes the difference-in-differences approach to time-series and measures the impact of changes in the exogenous variables on the target variable. The causal impact of a change in a driver is given by the difference between the observed value of the target variable and the value of the target that would have been observed had the driver not changed (the counterfactual scenario). 
+
+Define the pre/post periods for the analysis and the exogenous variables. 
+
+```{r}
+time.points <- seq.Date(as.Date("1999-02-01"), by = "m", length.out = 216)
+data <- zoo::zoo(cbind(y=dt$oil, ip=dt$ip, ir=dt$ir ,m2=dt$m2, cpi=dt$cpi,tr_ex=dt$tr_ex), time.points)
+pre.period <- as.Date(c("1999-02-01", "2013-12-01"))
+post.period <- as.Date(c("2014-01-01", "2017-01-01"))
+```
+
+Estimate the causal impact model
+
+```{r}
+impact_model <- CausalImpact(data, pre.period, post.period) 
+```
+
+Plot the model output
+
++ Panel 1:  The observed data for the target variable and the fitted values of the target for the post-period: the target variable determined entirely by the model variables. 
+
++ Panel 2; Difference between the actual data and the fitted values. 
+
++ Panel 3: Cumulative effect of the change in the exogenous variables on the target. 
+
+```{r, warning=FALSE}
+plot(impact_model)
+```
+
+
+
+

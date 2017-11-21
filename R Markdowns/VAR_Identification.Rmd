@@ -1,0 +1,275 @@
+---
+title: "VAR Models - POC"
+date: "10 April 2017"
+output:
+  html_document: default
+  html_notebook: default
+bibliography: library.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load the packages
+```{r}
+suppressPackageStartupMessages({
+library(vars)
+library(urca)
+library(knitr)
+library(VARsignR)
+library(pander)
+library(MSBVAR)
+})
+```
+###Data
+
+I implemented a model for the global market of crude oil following the structure used by [@Killian2012]. The model includes 4 endogenous variables in logs: 
+
++ changes in global crude oil production: $\Delta oil.prod$, which captures aggregate supply shocks;
+
++ changes in an index of economic activity, measured by the global industrial production index: $\Delta global.ip$, assumed to capture aggregate demand shocks;
+
++ changes in real Brent oil prices, deflated using the US CPI: $\Delta roil.price$, designed to capture oil-market specific demand shocks; 
+
++ changes in global inventories of crude oil: $\Delta oil.inventory$, intended to capture speculative demand for oil. 
+
+As exogenous variables I added seasonal dummies and an indicator for the recent declines in prices (dummy) that takes the value 1 during the 2008-09 recession and during the recent decline in oil prices between 2014 and 2016. 
+
+```{r}
+setwd("C:/Users/mfp43003/Desktop/EAA/data")
+
+dt<-ts(xlsx::read.xlsx("EAA_Test_VAR.xlsx", sheetName = "VAR data", colIndex = 8:11,
+                           startRow = 2,endRow = 242, header=T), start=c(1997,1),freq=12)
+dummy<-ts(xlsx::read.xlsx("EAA_Test_VAR.xlsx", sheetName = "VAR data", colIndex = 12,
+                              startRow = 2,endRow = 242, header=T), start=c(1997,1),freq=12)
+```
+
+
+####Plots of the data
+
+```{r}
+plot(dt, main="Endogenous variables included in the VAR")
+```
+
+Indicator of recent declines in oil prices has been included as an exogenous variable, together with seasonal dummies: 
+
+```{r, echo=FALSE}
+plot(dt[,"roil_price"],type="l",col=1, 
+     ylab="Log (Brent)",xlab="Time",main="Recent sharp declines in Brent")
+par(new=TRUE)
+plot(dummy,type="l",col=3,xaxt="n",yaxt="n",xlab="",ylab="")
+axis(4)
+mtext("Declines in Brent",side=4,line=3, col=3)
+legend("topleft",col=c(1,3),lty=1,legend=c("Log(Brent)","Declines indicator"))
+
+```
+
+####Stationarity 
+
+The results of the unit root tests show that all the variables included in the analysis are integrated of order 1. In other words, these are first-difference stationary. Thus, in the VAR model I used the first difference of the data.
+
+```{r}
+uroots<-data.frame(dt[1:6,], row.names=c("Test value - levels","Critical Value at 5%","Test result - levels",
+                                         "Test value - difference", "Critical value at 5%,", "Test results - difference"))
+
+for(i in 1:ncol(dt)){
+  uroots[1,i]<-round(ur.df(dt[,i], lags=12,type=c("drift"), selectlags = "BIC")@teststat[1,2],2)
+  uroots[2,i]<-ur.df(dt[,i], lags=12,type=c("drift"), selectlags = "BIC")@cval[2,2]
+  uroots[3,i]<-ifelse(uroots[1,i]>uroots[2,i],"Stationary","Unit Root")
+  uroots[4,i]<-round(ur.df(diff(dt[,i]), lags=12, type="none",selectlags = "BIC")@teststat[1,1],2)
+  uroots[5,i]<-ur.df(diff(dt[,i]), lags=12, type="none", selectlags = "BIC")@cval[1,2]
+  uroots[6,i]<-ifelse(uroots[4,i]> uroots[5,i],"Stationary","Unit Root")
+}
+```
+
+
+```{r echo = FALSE, results = 'asis'}
+kable(t(uroots), caption = "Unit root test results")
+```
+
+
+
+
+###Simulations with impulse-response functions - unanticipated shocks to the economy 
+
+
+#####Data for estimating the models - first difference
+```{r}
+d.dt<-diff(dt,lag=1)
+d.dummy<-ts(cbind(d=dummy[2:nrow(dummy),]),start=c(1997,2),freq=12)
+```
+
+
+Recovering structural shocks from reduced-from VAR models is still an unresolved issue. In order to remain as agnostic as possible in terms of identifying restrictions, the method developed by [@Uhlig2005] of sign restrictions is tested here. Sign restrictions have become a popular alternative to the traditional approaches such as the Cholesky decomposition or zero restrictions, used to identify VAR systems [@Kilian2012; @Fry2011].
+
+In this setting, prior beliefs about the sign of the impact of certain shocks can be used to identify structural shocks in VAR models [@Uhlig2005; @Canova2002]. The sign restrictions can be based on previous studies and formal models. 
+
+Uhlig proposes the following procedure to partially identify a VAR model and and limit the number of a priori assumptions one needs to use in order to identify the structural shocks^[While this procedure aims to identify only one shock and not a complete identification of all the underlying structural shocks in the system, it can be extended to identify multiple simultaneous shocks.]: 
+
++ define sign restrictions for some of the variables in the system *on the impulse response functions* to a particular shock^[No zero restrictions are imposed and the sign restrictions are imposed on the *orthogonalized* impulse-response functions and not on the variable coefficients.];
+
++ pick a time period following the shock during which the sign restrictions are expected to hold - in this example the restrictions are assumed to hold for about 6 months; 
+
++ estimate a Bayesian VAR with a flat (i.e. uninformative) Normal inverted-Whishart prior - the model is estimated on log-differences of the data, except for interest rates; 
+
++ take draws from the posterior of the VAR parameters and compute impulse response functions; keep only the set of responses that satisfy the sign restrictions and repeat this step sufficiently often until we get a large sample of responses to perform inference analysis and construct error bands around the accepted draws. 
+
+
+Under this identification procedure the models are set-identified as the sign restrictions do not generate a unique set of impulse responses [@Moon2011]. Thus, **while the structural shock of interest is identified, the model is unidentified under sign restrictions** [@Fry2011] as many different models can provide a similarly good fit to the data. 
+Uhlig addresses this by proposing a penalty function that allows for a larger set of draws to be considered, even though they don't satisfy the sign restrictions. This approach imposes a penalty for violations of the sign restrictions but it doesn't reject the responses.
+
+Robustness checks have been performed by identifying the economic shock using Uhlig's penalty function and [@Rubio-Ramirez2010] rejection method.^[These procedures are available in R in the package *VARsignR*.]
+
+
+What are the effects of an improvement in the economic environment on the oil market? The only assumption made here is that a positive shock to the global industrial production index (the second variable in the data frame of endogenous variables) is believed to have a positive impact on oil production for a period of about six months. No constraints are imposed on responses of oil prices and oil inventories - these will be computed by the model. 
+
+To identify the positive economic activity shock we only impose that a positive economic shock leads to an increase in global oil production. This assumption doesn't seem to be a very controversial consequence of an increase in global economic activity and it is supported by the data. 
+
+
+```{r pander}
+table <- rbind(Variables=colnames(dt), Shock=c("+", "+", "none","none"))
+pandoc.table(table,style = "grid", caption = "Sign restrictons")
+```
+
+
+Impulse-response functions: the first element in the *constr* function below indicates the shock of interest in the model. Given the ordering of the variables in the data frame, the second variable represents the global industrial production index. 
+
+The VAR model is estimated using the differenced data with two lags, no constant and assumes the sign restrictions last for 6 months following the shock. The impulse response functions are computed for a duration of 24 month following the positive shock to the economic activity. 
+
+Mathematically, the second-order (2 lags) VAR model is given by: 
+
+$y_{t} = c + A_{1}y_{t-1}+ A_{2}y_{t-2} + \epsilon_{t},     \epsilon_{t} \sim N(0, \Sigma)$
+
+And the VAR in first differences is represented by: 
+
+$\Delta y_{t} = B_{1}\Delta y_{t-1}+ B_{2}\Delta y_{t-2} + \epsilon_{t}$
+
+Where $y_{t}$ represents the vector of endogenous variables: 
+
+$$y_{t} = \begin{bmatrix}
+\Delta oil.prod \\
+\Delta global.ip \\
+\Delta roil.price \\
+\Delta oil.inventory
+\end{bmatrix}
+$$
+
+
+The expanded equations are represented by: 
+
+$\Delta oil.prod_{t} = a_{11}\Delta oil.prod_{t-1} + a_{12}\Delta oil.prod_{t-2} + a_{13}\Delta global.ip_{t-1} + a_{14}\Delta global.ip_{t-2} + a_{15}\Delta roil.price_{t-1} + a_{16}\Delta roil.price_{t-2} + a_{17}\Delta oil.inventory_{t-1} + a_{18}\Delta oil.inventory_{t-2}$
+                       
+$\Delta global.ip_{t} = a_{11}\Delta oil.prod_{t-1} + a_{12}\Delta oil.prod_{t-2} + a_{13}\Delta global.ip_{t-1} + a_{14}\Delta global.ip_{t-2} + a_{15}\Delta roil.price_{t-1} + a_{16}\Delta roil.price_{t-2} + a_{17}\Delta oil.inventory_{t-1} + a_{18}\Delta oil.inventory_{t-2}$
+                       
+$\Delta roil.price_{t} = a_{11}\Delta oil.prod_{t-1} + a_{12}\Delta oil.prod_{t-2} + a_{13}\Delta global.ip_{t-1} + a_{14}\Delta global.ip_{t-2} + a_{15}\Delta roil.price_{t-1} + a_{16}\Delta roil.price_{t-2} + a_{17}\Delta oil.inventory_{t-1} + a_{18}\Delta oil.inventory_{t-2}$
+                       
+                       
+$\Delta oil.inventory_{t} = a_{11}\Delta oil.prod_{t-1} + a_{12}\Delta oil.prod_{t-2} + a_{13}\Delta global.ip_{t-1} + a_{14}\Delta global.ip_{t-2} + a_{15}\Delta roil.price_{t-1} + a_{16}\Delta roil.price_{t-2} + a_{17}\Delta oil.inventory_{t-1} + a_{18}\Delta oil.inventory_{t-2}$
+                       
+
+
+```{r, results="hide"}
+constr <- c(+2,+1)
+
+var2 <- uhlig.penalty(Y=d.dt, nlags=2, draws=2000, subdraws=1000, nkeep=1000, KMIN=1, KMAX=6, constrained=constr, constant=FALSE, crit=0.005, steps=24)
+
+irfs1 <- var2$IRFS
+vl <- c("Oil Production","Economic Activity","Brent (real price index)","Oil inventory")
+```
+
+The median of the impulse-response functions are plotted with 68% confidence bands: 
+
+```{r}
+irfplot(irfdraws=irfs1, type="median", labels=vl, save=FALSE, bands=c(0.16, 0.84), grid=TRUE, bw=FALSE)
+```
+
+An unanticipated positive economic shock (the magnitude equal one standard deviation of the industrial production index) leads to positive and statistically significant impact on oil prices and a negative effect on oil inventories. 
+
+
+### Conditional forecasts with BVAR models 
+
+Use the hard condition function *hc.forecast* from package **MSBVAR**. This function allows the forecasts of one or more of the endogenous variables in the VAR model to be constrained to special paths^[The unanticipated shocks simulated previously do not allow for conditions to be imposed on the endogenous variables.].
+
+
+
+Fit a BVAR model with a flat prior
+
+```{r}
+bvar <- szbvar(dt, p=2, z=NULL, lambda0=1,
+                         lambda1=0.1, lambda3=2, lambda4=0.5, lambda5=0,
+                         mu5=3, mu6=3, nu=ncol(dt)+1, qm=12, prior=0,
+                         posterior.fit=T)
+
+```
+
+Set up conditional forecast matrix conditions: forecasts should be computed for 24 months and the growth rate of the industrial production index is assumed to increase on average by one standard deviation of the historical data: 
+
+```{r}
+nsteps <- 24
+ip.condition <- rep(6.8, nsteps)
+yhat<-matrix(c(rep(0, nsteps),ip.condition, rep(0, nsteps*2)), ncol=4)
+```
+
+Set the random number seed so we can replicate the results and the conditional and the unconditional forecasts
+
+```{r, results="hide"}
+set.seed(11023)
+conditional.forcs <- hc.forecast(bvar, yhat, nsteps, burnin=3000, gibbs=5000, exog=NULL)
+unconditional.forcs <-uc.forecast(bvar, nsteps, burnin=3000, gibbs=5000, exog=NULL)
+```
+
+Set-up and plot the unconditional and conditional forecasts.  
+
+```{r}
+uc.flat <- NULL
+hc.flat <- NULL
+uc.flat$forecast <- unconditional.forcs$forecast[,,3:4]
+hc.flat$forecast <- conditional.forcs$forecast[,,3:4]
+```
+
+Plot the conditional/unconditional forecasts and the actuals
+
+```{r}
+plot.hc <- function(fcasts1, varnames=NULL, start=c(0,1), 
+                             freq=1, probs=c(0.05,0.95),
+                             compare.level=NULL, ylab=NULL, ...)
+  
+{ 
+  m <- dim(fcasts1$forecast)[3]
+  h <- dim(fcasts1$forecast)[2]
+  iters <- dim(fcasts1$forecast)[1]
+  fcast1.summary <- array(apply(fcasts1$forecast, 3, forc.ecdf, probs=probs), c(h,3,m))
+
+  par(las=1, mar=c(1,2,2.5,1))
+  for(i in 1:m)
+  { forc1.ci <- ts(fcast1.summary[,,i], start=start)
+  
+  ylim <- c(floor(min(c(forc1.ci))),
+            ceiling(max(c(forc1.ci))))
+  
+  ts.plot(forc1.ci,  gpars=list(lty=c(1,1,1,2,2,2,4),
+                     col=c("red","blue","blue"),
+                     ylim=ylim, xlab="",axes=FALSE, ... ))
+  axis(2,c(floor(min(c(forc1.ci))),
+           ceiling(max(c(forc1.ci)))))
+  mtext(varnames[i],side=3,line=1)
+  
+  box();
+  if(i==1) { mtext(ylab, side=2, line=3, at=c(1.5*mean(ylim))) }
+  abline(h=0)
+  
+  }
+}
+
+```
+
+###References
+
+
+
+
+
+
+
+

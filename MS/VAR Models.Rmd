@@ -1,0 +1,227 @@
+---
+title: "Simulated Annealing and Partial Mutual Information"
+author: "Lou Zhang"
+date: "23 March 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+Load the packages
+```{r}
+wants <- c("glmnet","lmtest", 'bsts',"tseries","lubridate", "stringr", "plyr", "dplyr","randomForest", "data.table", "forecast", "tidyr", "prophet",
+           "doSNOW", "RODBC", "doParallel", "caret", "beepr", "mlbench", "corrplot", "usdm", "MASS", "dynlm", "nnet", 'igraph',
+           "foreach", "zoo","reshape2","beepr","MLmetrics","doBy","DataCombine","TSclust","dyn","car","rgp","e1071","tsoutliers",'infotheo','mRMRe')
+has   <- wants %in% rownames(installed.packages())
+if(any(!has)) install.packages(wants[!has])
+sapply(wants, require, character.only = TRUE)
+rm("wants","has")
+```
+###Data
+
+Simulated Annealing and Partial Mutual Information are methods for feature selection which we are potentially considering for use on the EAA project. This document will discuss theoretical background behind these methods, the code used to execute the methods, and an evaluation of the results and their suitability for the EAA project.
+
+The data has been pre-processed to remove autocorrelation and heteroskedasticity. 
+
+Simulated Annealing
+
+```{r}
+setwd("C:\\Users\\Viu52790\\Desktop\\Energy\\Modeling")
+
+
+MonthlySeriesA <- read.csv("original2.csv")
+oil <- c('v175310959','v134253300','v134253301','v175310959','v134253301','v175310959','v151387513','v153100429','v167792729','v167792760','v12905340','v167792843','v151387540','v151387541','v167792874','v1103596636','v16136954','v167792719','v12637810','v14326136','v153100430','v16136957','v12638003','v151387542','v151387512','v127401234','v180123009','v12638005','v16136955','v164401578','v167792833','v167792888','v16137003','v151124975','v167792762','v124220223','v151368216','v124220225','v167792761','v178708765','v167792875','v151387504','v175309942','v133629970','v175309941','v156653965','v163438224','v188509022','v175309567','v12511714','v12637814','v156653101','v153100174','v180946093','v12511866','v168704178','v168704177','v151124966','v130144523','v178708763','v12637812','v151124965','v12509208','v180122938','v169800232','v157568507','v142001988','v16137039')
+
+MonthlySeriesA <- MonthlySeriesA[ , !(names(MonthlySeriesA) %in% oil)]
+MonthlySeriesA <- MonthlySeriesA[,4:ncol(MonthlySeriesA)]
+MonthlySeriesA <- head(MonthlySeriesA, 192)
+
+oilProductionByMonth <- read.csv('MonthlyOilProduction.csv', header = FALSE)
+
+oilProductionByMonth <- oilProductionByMonth[,5:6]
+
+oilProductionByMonth <- tail(oilProductionByMonth,192)
+
+oilProductionByMonth <- as.data.frame(oilProductionByMonth[,2])
+```
+
+
+<!-- ####Plots of the data -->
+
+<!-- ```{r} -->
+<!-- plot(dt, main="Endogenous variables included in the VAR") -->
+<!-- ``` -->
+
+<!-- Indicator of recent declines in oil prices has been included as an exogenous variable, together with seasonal dummies:  -->
+
+<!-- ```{r, echo=FALSE} -->
+<!-- plot(dt[,"roil_price"],type="l",col=1,  -->
+<!--      ylab="Log (Brent)",xlab="Time",main="Recent sharp declines in Brent") -->
+<!-- par(new=TRUE) -->
+<!-- plot(dummy,type="l",col=3,xaxt="n",yaxt="n",xlab="",ylab="") -->
+<!-- axis(4) -->
+<!-- mtext("Declines in Brent",side=4,line=3, col=3) -->
+<!-- legend("topleft",col=c(1,3),lty=1,legend=c("Log(Brent)","Declines indicator")) -->
+
+<!-- ``` -->
+
+<!-- ####Stationarity  -->
+
+<!-- The results of the unit root tests show that all the variables included in the analysis are integrated of order 1. In other words, these are first-difference stationary. Thus, in the VAR model I used the first difference of the data. -->
+
+<!-- ```{r} -->
+<!-- uroots<-data.frame(dt[1:6,], row.names=c("Test value - levels","Critical Value at 5%","Test result - levels", -->
+<!--                                          "Test value - difference", "Critical value at 5%,", "Test results - difference")) -->
+
+<!-- for(i in 1:ncol(dt)){ -->
+<!--   uroots[1,i]<-round(ur.df(dt[,i], lags=12,type=c("drift"), selectlags = "BIC")@teststat[1,2],2) -->
+<!--   uroots[2,i]<-ur.df(dt[,i], lags=12,type=c("drift"), selectlags = "BIC")@cval[2,2] -->
+<!--   uroots[3,i]<-ifelse(uroots[1,i]>uroots[2,i],"Stationary","Unit Root") -->
+<!--   uroots[4,i]<-round(ur.df(diff(dt[,i]), lags=12, type="none",selectlags = "BIC")@teststat[1,1],2) -->
+<!--   uroots[5,i]<-ur.df(diff(dt[,i]), lags=12, type="none", selectlags = "BIC")@cval[1,2] -->
+<!--   uroots[6,i]<-ifelse(uroots[4,i]> uroots[5,i],"Stationary","Unit Root") -->
+<!-- } -->
+<!-- ``` -->
+
+
+<!-- ```{r echo = FALSE, results = 'asis'} -->
+<!-- kable(t(uroots), caption = "Unit root test results") -->
+<!-- ``` -->
+
+<!-- ###Data for modeling  -->
+<!-- ```{r} -->
+<!-- d.dt<-diff(dt,lag=1) -->
+<!-- d.dummy<-cbind(d=dummy[2:nrow(dummy),]) -->
+<!-- ``` -->
+
+<!-- The optimum number of lags of the endogenous variables is determined based on information criteria. A maximum number of 12 lags has been specified.  -->
+
+<!-- The endogenous equations contain the following exogenous variables:  -->
+<!-- + constants, trends, seasonal dummies and the recession indicator.  -->
+
+<!-- ```{r} -->
+<!-- VARselect(dt, lag.max = 12, type="both", season=12) -->
+<!-- VARselect(d.dt, lag.max = 12, type="both",season=12) -->
+<!-- ``` -->
+
+<!-- Three out of 4 information criteria selected 2 lags for the differenced data. Thus, the VAR model has been estimated with 2 lags.  -->
+
+<!-- ```{r} -->
+<!-- var1 <- VAR(d.dt, p = 2, type = "const", season=12, lag.max=12,ic="AIC", exogen=d.dummy) -->
+<!-- ``` -->
+
+<!-- ####Granger (lags) and instantaneous causality tests:  -->
+
+<!-- ```{r} -->
+<!-- causality(var1, cause = "oil_prod", vcov.=vcovHC(var1)) -->
+<!-- MSBVAR::granger.test(dt,p=2) -->
+<!-- ``` -->
+
+<!-- #####Oil production doesn't cause oil prices on lags or instantaneusly.   -->
+
+<!-- #####Granger causality suggests the following sequence:  -->
+
+<!-- + Economic Activity --> Oil supply  -->
+
+<!-- + Economic Activity --> Oil prices  -->
+
+<!-- + Oil supply -> Economic Activity  -->
+
+
+<!-- #### Diagnostic Tests for model var1: -->
+<!-- ```{r, warning=FALSE} -->
+<!-- ser1 <- serial.test(var1, lags.pt = 6, type = "PT.asymptotic") -->
+<!-- ser1$serial -->
+<!-- norm1 <-normality.test(var1) -->
+<!-- norm1$jb.mul -->
+<!-- arch1 <- arch.test(var1, lags.multi = 6) -->
+<!-- arch1$arch.mul -->
+<!-- plot(arch1, names = "hp") -->
+<!-- plot(stability(var1), nc = 2) -->
+<!-- ``` -->
+
+<!-- ####Predictions  -->
+<!-- ```{r} -->
+<!-- dumvar<-cbind(d=rep(0,12)) -->
+<!-- var1.prd <- predict(var1, n.ahead = 12, ci = 0.95, dumvar=dumvar) -->
+<!-- ``` -->
+
+<!-- ```{r,fig.height=10} -->
+<!-- fanchart(var1.prd) -->
+<!-- ``` -->
+
+<!-- ###Scenarios: Anticipated vs. unanticipated shocks -->
+
+<!-- Anticipated shocks are defined by the user through:  -->
+
+<!-- + forecasts of the exogenous variables; and -->
+<!-- + conditional forecasts via user defined paths of some of the endogenous variables.   -->
+
+<!-- Unanticipated shocks are usually used to identify the structure of VAR models, similar to the coefficient estimates in a classical regression. These are then evaluated in terms of dynamics and statistical significance via impulse-response functions.  -->
+<!-- These exogenous shocks are specified in the matrix of the error terms.  -->
+
+<!-- ####Exogenous shocks in the oil market -->
+
+<!-- Suppose we have data on oil prices and quantities. Based on the dynamic relationship between the variables described by the reduced-form of the VAR we can forecast price and quantity in the next period. That forecast will probably be wrong as economic shocks happen.  -->
+
+<!-- The difference between the in-sample model forecasts and the observed price and quantity are the reduced -form errors. These reduced-form errors are caused by shifts in the demand and the supply curves. In this example, the shifts in the demand and supply curves are the underlying structural shocks.  -->
+
+<!-- A price errors is therefore a weighted average of demand and supply shocks with unknown weights.It is meaningless to talk about quantity shocks and supply shocks instead of demand and supply shocks, since sometimes prices change because of demand and sometimes because of supply.  -->
+
+<!-- The trick of VAR modelling is to find some credible way to back out the structural shocks  from our observations on the reduced-form errors. In other words, to try to work out what the unknown weights are.  -->
+
+<!-- How can we recover the underlying demand and supply shocks from our observed in-sample errors in prices and quantities?  The shocks in VAR models have names like demand, supply, monetary policy, technology, etc.  -->
+
+<!-- Without these exogenous structural shocks the impulse responses and variance decomposition are meaningless since all we are doing is hitting the system with a weighted average of structural shocks with unknown weights and reporting what happens. If we don't know what the shocks are then how are we supposed to know what the responses mean?  -->
+
+<!-- ####Shocks in the global market for oil -->
+
+<!-- Killian (2009) identified a similar model as the one presented here using a combination of sign restrictions on the impact responses and bounds on the impact of price elasticities of the oil demand and oil supply.  -->
+
+<!-- The matrix of errors is as follows:  -->
+
+
+<!-- $$\left[\begin{array}{c} -->
+<!-- \epsilon_t^{\Delta oil.prod} \\ -->
+<!-- \epsilon_t^{\Delta global.ip} \\ -->
+<!-- \epsilon_t^{\Delta roil.price} \\ -->
+<!-- \epsilon_t^{\Delta oil.inventory} -->
+<!-- \end{array}\right] = -->
+<!-- \left[\begin{array}{cccc} -->
+<!-- - & + & + & \times \\ -->
+<!-- - & + & - & \times \\ -->
+<!-- + & + & + & \times \\ -->
+<!-- \times & \times & + & \times -->
+<!-- \end{array}\right] -->
+<!-- \left[\begin{array}{c} -->
+<!-- u_{t}^{flow.supply}\\ -->
+<!-- u_{t}^{flow.demand}\\ -->
+<!-- u_{t}^{speculative.demand}\\ -->
+<!-- u_{t}^{other.oil.demand} -->
+<!-- \end{array}\right] -->
+<!-- $$ -->
+
+<!-- ####Interpretation of the sign restrictions:  -->
+
+<!-- + first column: on impact, a negative flow supply shock shifts the supply curve to the left: $\downarrow$ Q $\Rightarrow$ $\uparrow$P $\Rightarrow$ $\downarrow$Econ activity; the impact on inventories is not identified, this will be estimated; -->
+
+<!-- + second column: a positive flow demand shock is assumed to $\uparrow$ Q, $\uparrow$P,  $\uparrow$Econ activity;  -->
+
+<!-- + third column: a positive speculative demand shock will have a tightening effect on oil markets, whihc will $\uparrow$ Oil inventories, $\uparrow$Q, $\uparrow$P $\Rightarrow$ $\downarrow$Econ activity.  -->
+
+
+<!-- http://www-personal.umich.edu/~lkilian/publications.html -->
+
+
+
+
+
+
+
+
+

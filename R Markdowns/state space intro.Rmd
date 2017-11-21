@@ -1,0 +1,317 @@
+---
+title: "State Space Models"
+output:
+  html_notebook: default
+  html_document: default
+date: "27 April 2017"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Load the packages
+
+```{r}
+suppressPackageStartupMessages({
+library(dlm)
+library(Quandl)
+library(pander)
+library(bsts)
+})
+```
+
+###Overview
+<br>
+
+This document will give an overview of state space models and their application to time series analysis. 
+State space models provide a very flexible framework to analyze data from a wide array of disciplines: from economics to aerospace engineering. These models are usually used to analyze data that do not assume a regular pattern, but can include change points or structural breaks. 
+
+Examples of irregular time series can be found especially in finance: stock prices may be influenced by unobserved (fundamental) information that can lead to sudden changes in prices. 
+
+**The main idea behind a state-space representation of a more complicated linear system is to capture the dynamics of an observed process in terms of a (possibly) unobserved process or a process for which we have missing observations.**
+
+![**The sequence of hidden states $x_{t}$ are observed through noisy measurements $y_{t}$**](C:/Users/mfp43003/Desktop/EAA/Predict Direction/hmm.png)
+
+
+State space models, originally introduced by Kalman (1960), are very common in engineering applications, physics, biology, finance, economics, etc. Many dynamic time series models in economics can be represented in state space form: dynamic linear models with unobserved components, time-varying regression models, nonstarionary time series with structural changes etc. 
+
+The goal of a state-space representation of a more complicated linear system is to:
+
++ estimate the hidden states $x_t$ given the observed measurements $y_t$; 
+
+The estimation can be performed using Bayes' rule: all we need to do is compute the joint posterior distribution of all the states given all the measurements: 
+$$
+p(x_{1}, ... , x_{T}| y_{1},...,y_{T}) = \frac{p(y_{1},...,y_{T}|x_{1},...,x_{T})p(x_{1},...,x_{T})}{p(y_{1},...,y_{T})}
+$$
+
+Where, 
+
++ $p(x_{1},...,p_{T})$, is the prior;
++ $p(y_{1},...,y_{T}|x_{1},...,x_{T})$ is the likelihood function (model) of the observed data;
++ $p(y_{1},...,y_{T})$ is just a normalization constant, independent of the states and often left out.
+
+This formulation is problematic as with each new observation the *full* posterior distribution would have to be recomputed, increasing the computational complexity with each step. The problem will become intractable quickly, however, this is a major problem only if we want to compute the full posterior density. 
+
+The problem becomes easier to handle if we are satisfied with the *marginal distribution* of the states. In this case, the dynamic model becomes a *Markov sequence*, defined as follows: 
+
++ the prior distribution of the hidden states in terms of the transition distribution $p(x_{k}|x_{k-1})$;
++ the dynamic model as a Markov sequence: $p(x_{k}|x_{k-1})$; and
++ a model for measurements that depends on the current value of the state: $p(y_{k}|x_{k})$. 
+
+Thus, the following **marginal distributions** of the hidden states are considered: 
++ filtering distribution: $p(x_{k}|y_{1},...,y_{k})$
++ prediction distribution: $p(x_{k+n}|y_{1},...,y_{k})$
++ smoothing distribution: $p(x_{k-1}|y_{1},...,y_{k})$.  
+<br> 
+
+**We seek to estimate the values of $x_t$ based on all available measurements $y_t$:**
+
++ if we have measurements up to time $t$, the estimation of $x_t$ is called *filtering*;
++ if the observations are available up to time $t+1$, the estimation (up to time t) of $x_t)$ is called *smoothing*; 
++ the estimation of $x_t$ based on observations up to time $t-1$ is called *forecasting*.
+
+
+For instance, the common dynamic evolution of many macroeconomic variables is assumed to depend on a common unobserved process, which is given by the business cycle but also trends, seasonality, explanatory variables, etc.  
+One of the most common techniques used to estimate the unobserved process given the measurement process is the so-called Kalman filter (used for linear dynamic models). 
+Many dynamic time series models in economics can be represented in state space form: autoregressive moving average (ARMA) models, dynamic linear models with unobserved components, time-varying regression models, etc.  They can be used to model univariate/multivariate time series in the presence of non-stationarity, structural changes, irregular patterns, etc. One of the main features of these models is that estimation and forecasting can be applied sequentially, as new data become available.
+
+While non-stationary time series are usually analyzed with ARIMA models (i.e. stock prices), they require a preliminary transformation of the data to get stationarity. On the other hand, state space models allow us to analyze such models more directly, without requiring a preliminary transformation of the data.  Furthermore, univariate time series are quite limited for economic systems: forecasting sudden changes is notoriously hard. Studies have shown that we can do better using a state space framework. 
+
+<br>
+
+
+
+<br> 
+
+###State space model for Brent spot prices 
+
+<br> 
+
+
+Assume prices are modeled by the following *time-invariant* state space model: 
+
++ the measurement observations, $y_t$, depend on the current state, $x_t$, given by:
+
+$$
+y_t = Fx_{t}+ v_t, \hspace{0.2in} v_t \sim N(0,V)
+$$
+
+with the evolution of the system given by the following state space equation: 
+
+
+$$
+x_t = Gx_{t-1} + w_t, \hspace{0.3in} w_t \sim N(0,W) 
+$$
+
+where,
+
++ $y_t$ is the observed spot price, representing the observation equation (measurements);
++ $x_t$ is the vector containing the unobserved (hidden) states of the system that are assumed to evolve in time (e.g. trends, drivers, and seasonality). The state space framework can be extended to non-linear models and non-normal errors. 
+
+The elements of the DLM: 
+
++ matrices F, G, V, W are assumed to be known; G is the transition matrix
++ the errors $v_t$ and $w_t$ are uncorrelated; 
++ the observable process $(y_t)_{t\ge1}$ is assumed to be determined by the latent (unobservable) process $(x_t)_{t\ge1}$. 
+
+<br> 
+
+####Example: AR(2) model in state-space form
+
+<br> 
+
+
+For example, an AR(2) model can be cast in state-space form as follows: 
+
++ AR(2) model: $y_{t} = \alpha_{0} + \alpha_{1}y_{t-1} + \alpha_{2}y_{t-2} + \epsilon_{t}$
++ define $x_{t} = (y_{t}, y_{t-1})'$
++ the transition equation becomes:
+
+
+$$\begin{bmatrix}
+y_{t}\\
+y_{t-1}
+\end{bmatrix}= 
+\begin{bmatrix}
+\alpha_{1} & \alpha_{2} \\
+1 & 0
+\end{bmatrix} 
+\begin{bmatrix}
+y_{t-1}\\
+y_{t-2}
+\end{bmatrix}+
+\begin{bmatrix}
+\alpha_{0}\\
+0
+\end{bmatrix}+
+\begin{bmatrix}
+1\\
+0
+\end{bmatrix}
+\epsilon_{t}
+$$
+
+
++ the measurement equation becomes $y_{t}=(1,0)x_{t}$ where $F= (1,0)$ and $v_{t}=0$
+
+
+<br> 
+
+**Example: Estimate a state space model for brent spot prices using seasonality, trend and industrial productionn as components of the system.**
+
+<br> 
+
+Download Brent spot prices from EIA and the US industrial production index: 
+
+```{r}
+brent <- Quandl("EIA/PET_RBRTE_D", collapse="monthly", type="ts")
+ip<- Quandl("FRED/INDPRO", collapse="monthly", type="ts",start_date="1987-05-01")
+```
+
+
+The filtering distribution of the Brent price series is given by the 
+
+```{r}
+build<-function(parm){dlmModPoly(order=1,dV=exp(parm[1]),dW=exp(parm[2]))}
+fit<-dlmMLE(brent,rep(0,2),build)
+brentPoly<-dlmModPoly(order=1,dV=0.01, dW=0.02)
+brentFilter<-dlmFilter(brent,brentPoly)
+```
+
+<br> 
+
+**Plot filtering values**
+
+```{r}
+plot(brent, col="black",ylab="Brent Spot Prices",xlab="",type="l",
+main="Filtered Valued of Brent Spot Prices")
+lines(brentFilter$m,col="red",lty="longdash")
+leg<-c("observed data", paste("filtered values"))
+legend("bottomright",legend=leg,col=c("black","red"),
+             lty=c("solid","longdash"),bty="n")
+
+```
+
+
+<br>
+
+
+### State space model with exogenous regressors, seasonality and trend: 
+
+<br>
+
+Mathematically, the state space model (or structural model) is given by: 
+
+$$
+y_{t} = trend_{t} + Season_{t} + \beta IP + \epsilon_{t}\\
+trend_{t} = trend_{t-1} + slope_{t} + \mu_{t}\\
+season_{t} = - \sum_{s=1}^{S-1} season_{t-1} + w_{t}\\
+slope_{t} = slope_{t-1} + v_{t}
+$$
+
+Where $slope_{t}$ is the slope of the trend, or the expected increase in the value of the trend between times t and t+1 and the S-1 dummy variables represent seasonality and have time varying coefficients. 
+
+<br>
+
+####1. Specify the **target variable y** (time series) as a numeric vector
+
+```{r}
+y <- log(window(brent, end=c(2014,12)))
+y_obs <-log(window(brent, start=c(2015,1), end=c(2017,3)))
+```
+
+####2. Prepare the **exogenous variable**
+
+```{r}
+x<- log(window(ip, end=c(2014,12)))
+x_obs <-log(window(ip, start=c(2015,1)))
+```
+
+
+####3. Components of the state:
++ Specify a **trend component** (a local linear trend). This is the equivalent of the intercept in a classical regression, however, in a state space system, this intercept is allowed to change from period to period.
+The level component can be allowed to be fixed (i.e. a global level) and applicable to all periods of the sample. 
+
+
+```{r}
+ss <- AddStudentLocalLinearTrend(list(),y)
+```
+
+ + Add a **seasonality component** via seasonal dummies: 
+```{r}
+ss <- AddSeasonal(ss, y, nseasons = 12)
+```
+
++ Add the regression component to capture the impact of the exogenous variables on the target variable. Estimate the state space model using a Markov Chain Monte Carlo (MCMC) algorithm for 5000 iterations and discarded the first 1000 as burn in.  
+
+The drivers can be specified with time-varying or static coefficients. In this example, I used static coefficients. 
+
+```{r}
+model <- bsts(y~., state.specification = ss, data=x, niter = 5000)
+```
+
+###Generate forecasts
+
+The state space system generates average forecasts by combining the predictions from a large set of models: 
+
+
+```{r}
+pred <- predict(model, horizon = nrow(x_obs), newdata=x_obs, burn = 1000)
+```
+
+Plot the forecast
+
+```{r}
+x2<-append(y,pred$mean,after=length(y))
+actual<-log(window(brent,end=c(2017,3)))
+comp <- ts(data.frame(forcs=x2, actual=actual),start=c(1987,5),freq=12)
+
+ts.plot(comp, main="Out-of-sample Brent forecasts", col=c(3,1), ylab="Log (Brent)")
+legend("topleft",col=c(3,1),lty=1,legend=c("Forecasts","Observed"))
+```
+
+
+<br>
+
+###Non-Gaussian, Nonlinear State Space Models
+<br> 
+
+Optimal Bayesian approaches are theoretically possible, but in practice, many integrals are not tractable.
+Exceptions: filtering classes with closed form solutions:
+
++ Kalman filters for linear Gaussian models
++ grid filters for finite state spaces: the posterior distribution is approximated as a discrete distribution on a finite grid
+
+For nonlinear, non-Gaussian models that can be reduced to Gaussian approximations: extended, unscented Kalman filters...
+
+
+**The methods covered so far cannot deal with heavily skewed or multimodal distributions and work only for Gaussian (approximations) models.**
+
+For all the other cases... particle filters based on sequential Monte Carlo methods. 
+
+Particle filter algorithms approximate the posterior distribution as a weighted set of randomly chosen samples from the posterior distribution.
+Sequential Importance Sampling (SIS) algorithm assumes that we can use an approximate distribution (importance distribution) to draw samples from.
+
+<br> 
+
+**Steps of the SIS algorithm:**
+
++ Draw N samples $x_0^{i}$ from the prior density (these are the "particles")
+$$
+x_0^{i} \sim \pi(x_0)
+$$
+
++ Set associated weights that are normalized: $\sum_i w_t^{(i)} = 1$ 
++ Draw N samples from the importance distribution $q(x_t|x_{t-1},y_{1:t})$:
+$$
+x_t^{(i)} \sim q(x_t|x_{t-1}^{(i)},y_{1:t})
+$$
+
++ Update the weights:
+$$
+w_t^{(i)} = w_{t-1}^{(i)}\dfrac{\pi(y_t|x_t^{(i)})\pi(x_y^{(i)}|x_{t-1}^{(i)})}{q(x_t^{(i)}|x_{0:t-1}^{(i)},y_{1:t})}
+$$
+
+

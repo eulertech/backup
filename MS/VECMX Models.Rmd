@@ -1,0 +1,447 @@
+---
+title: "VECMX Models - Forecasts"
+author: "Mihaela Solcan"
+date: "19 May 2017"
+output:
+  html_notebook: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load the packages
+```{r}
+suppressPackageStartupMessages({
+library(vars)
+library(knitr)
+library(pander)
+library(urca)
+library(tsDyn)
+library(forecast)
+library(xtable)
+set.seed(12345)
+library(VARsignR)
+})
+```
+
+<br> 
+
+###Data
+
+The data contain two sets of variables: 
+
++ **endogenous variables**: oil market fundamentals: demand, supply, Brent price, inventories; 
++ **exogenous variables**: economic indicators: recession, OPEC meetings, expectations of business cycles measured by interest rate spreads (the yield curve), interest rates, industrial production indicators.
+
+
+```{r echo=FALSE}
+Exogenous<-c("Recession", "OPEC meeting", "Seasonality", "Global Industrial Production", "Interest rate spread (expected business cycle)")
+
+
+models_world<-c("World")
+endogenous_world<-c("Global demand for liquids", "Global production of liquids", "Brent spot price", "Global inventory changes")
+world<-qpcR:::cbind.na(Models=models_world ,Endogenous=endogenous_world)
+
+models_opec<-c("OPEC/Non-OPEC - World Demand")
+endogenous_opec<-c("Global demand for liquids", "OPEC production of liquids", "Non-OPEC production of liquids",
+                   "Brent spot price", "Global inventory changes")
+opec<-qpcR:::cbind.na(Models=models_opec ,Endogenous=endogenous_opec)
+
+
+models_oecd<-c("OEPC/Non-OPEC - OECD/Non-OECD Demand")
+endogenous_oecd<-c("OECD demand for liquids","Non-OECD demand for liquids", "OPEC production of liquids", 
+                   "Non-OPEC production of liquids", "Brent spot price", "Global inventory changes")
+
+oecd<-qpcR:::cbind.na(Models=models_oecd ,Endogenous=endogenous_oecd)
+
+table<-rbind(world,"",opec,"",oecd)
+vecm_data<-qpcR:::cbind.na(table, Exogenous)
+vecm_data[is.na(vecm_data)] <- " "   
+```
+
+<br> 
+
+The following regional models have been estimated: 
+
+```{r}
+pandoc.table(vecm_data, justify = 'left',caption = 'Variables used in VECMX models',
+             split.table = Inf, style="multiline")
+```
+
+
+<br> 
+
+
+```{r}
+setwd("C:/Users/mfp43003/Desktop/EAA/VECM")
+
+ihs_predictions <- ts(xlsx::read.xlsx("VAR Data.xlsx", sheetName = "Hindsight forecasts", colIndex = 2:20,
+                           startRow = 1, header=T), start=c(2016,11),freq=12)
+
+dt <- ts(xlsx::read.xlsx("VAR Data.xlsx", sheetName = "data", colIndex = 2:59,
+                             startRow = 1, header=T), start=c(2001,1),freq=12)
+
+
+
+exog <- c("Recession", "OPEC_Meeting", "IP_WOR_M_LOG","RMSPREAD_WOR_M_FGI","Jan", "Feb", "Mar", "Apr","May",
+          "Jun", "Jul", "Aug", "Sep","Oct","Nov")
+X_forc <- window(ihs_predictions[,exog], start=c(2016,11), end=c(2017,4))
+X <- window(dt[,exog], end=c(2016,10))
+
+
+
+endog_wor <- c("D_WOR_LIQUIDS","P_WOR_LIQUIDS","POILBNT_WOR_M_FGI","INVCHANGE_WOR_LIQUIDS") 
+Y_wor <- window(dt[,endog_wor], end=c(2016,10))
+Y_wor_log<- cbind(D_WOR_LIQUIDS=log(Y_wor[, "D_WOR_LIQUIDS"]),
+                  P_WOR_LIQUIDS=log(Y_wor[, "P_WOR_LIQUIDS"]),
+                  POILBNT_WOR_M_FGI = log(Y_wor[,"POILBNT_WOR_M_FGI"]), 
+                  INVCHANGE_WOR_LIQUIDS=Y_wor[,"INVCHANGE_WOR_LIQUIDS"])
+
+
+endog_oecd <- c("D_OECD_LIQUIDS","D_NONOECD_LIQUIDS","P_NONOPEC_LIQUIDS","P_OPEC_LIQUIDS","POILBNT_WOR_M_FGI","INVCHANGE_WOR_LIQUIDS")
+Y_oecd<- window(dt[,endog_oecd], end=c(2016,10))
+Y_oecd_log<-cbind(D_OECD_LIQUIDS=log(Y_oecd[,"D_OECD_LIQUIDS"]), D_NONOECD_LIQUIDS=log(Y_oecd[,"D_NONOECD_LIQUIDS"]),
+                  P_NONOPEC_LIQUIDS=log(Y_oecd[,"P_NONOPEC_LIQUIDS"]),
+                  P_OPEC_LIQUIDS=log(Y_oecd[,"P_OPEC_LIQUIDS"]), POILBNT_WOR_M_FGI=log(Y_oecd[,"POILBNT_WOR_M_FGI"]),
+                  INVCHANGE_WOR_LIQUIDS=Y_oecd[,"INVCHANGE_WOR_LIQUIDS"])
+
+
+endog_opec <- c("D_WOR_LIQUIDS","P_NONOPEC_LIQUIDS","P_OPEC_LIQUIDS","POILBNT_WOR_M_FGI","INVCHANGE_WOR_LIQUIDS")
+Y_opec <- window(dt[,endog_opec], end=c(2016,10))
+Y_opec_log<-cbind(D_WOR_LIQUIDS=log(Y_opec[,"D_WOR_LIQUIDS"]),P_NONOPEC_LIQUIDS=log(Y_opec[,"P_NONOPEC_LIQUIDS"]),
+                  P_OPEC_LIQUIDS=log(Y_opec[,"P_OPEC_LIQUIDS"]), POILBNT_WOR_M_FGI=log(Y_opec[,"POILBNT_WOR_M_FGI"]),
+                  INVCHANGE_WOR_LIQUIDS=Y_opec[,"INVCHANGE_WOR_LIQUIDS"])
+
+```
+
+
+####Plots of the data
+
+```{r}
+plot(Y_wor, ylab="",main="Endogenous variables included in the World VECMX model")
+```
+```{r}
+plot(cbind(dt[,"SPREAD_WOR_LIQUIDS"], dt[,"INVCHANGE_WOR_LIQUIDS"]), col=1:2, main="Spread demand-supply vs changes in inventories", ylab="")
+correlation<-cor(dt[,"SPREAD_WOR_LIQUIDS"], dt[,"INVCHANGE_WOR_LIQUIDS"])
+print(correlation)
+```
+
+
+<br> 
+
+```{r}
+plot(X[,1:4], main="Exogenous variables included in the World VECMX model")
+```
+
+### VECMX Model 
+
+<br>
+
+The VECMX in math notation is given by: 
+
+<br>
+
+$Y_{t} = c_{0} + c_{1}t + \Pi Y_{t-1} + B_{1} \Delta Y_{t-1}  + \gamma_{1} OPEC Meeting_{t} + \gamma_{2} GlobalIP_{t} + \gamma_{3} GlobalSPREAD_{t} + \gamma_{4} Recession_{t}  + \sum_{m} s_{m} Season  +\epsilon_{t}$,  
+
+$\epsilon_{t} \sim N(0, \Sigma)$
+
+<br>
+
+Where $Y_{t}$ represents the vector of endogenous variables: 
+
+<br>
+
+$$
+Y_{t} = \begin{bmatrix}
+global \ demand \ for \ liquids \\
+global \ supply \ of \ liquids \\
+global \ brent \ prices \\
+global \ liquids \ inventories
+\end{bmatrix}
+$$
+
+<br> 
+
+The matrix $\Pi$ represents the long-run multiplier matrix of the system and is derived from the reduced-form of the VAR model in levels: 
+<br>
+
+$Y_{t} = c_{0} + c_{1}t + A_{1}Y_{t-1} + A_{2}Y_{t-2} + \epsilon_{t}$
+
+then, 
+
+$\Pi = (A_{1} + A_{2} - I_{2})$
+
+### VAR models in error correction form
+
+<br> 
+
+1. Check the endogenous variables are I(1):
+
+```{r}
+lagOrder = trunc((nrow(Y_wor)-1)^(1/3))
+Test <- apply(Y_wor,2,adf.test, alternative="stationary", k=lagOrder)
+print(Test)
+```
+
+<br> 
+
+2. Test for the number of cointegration relations between the endogenous variables with Johansen' procedure. The procedure consists of two steps: 
+
++ test for the rank of matrix $\Pi$. The rank represents the number of cointegrating relationships between the endogenous variables. This represents **the number of linear combinations of the non-stationary endogenous variables that are stationary.** 
+
++ if the matrix $\Pi$ is of reduced rank, or if there is at least one cointegrating relation between the endogenous variables, $\Pi$ can be decomposed into two $(n \times r)$ matrices: 
+
+    $\Pi = \alpha \beta'$ such that $\beta'Y_{t} \sim I(0)$, where
+    
+    $\alpha$ contains the loading parameters of the speed of adjustment of the variables to the long-run equilibrium. 
+    
+    $\beta$ represents the cointegration vector, or the long-run relationship between the oil market fundamentals. 
+
+The number of cointegrating (long-run) relations is tested below. The results suggest the existence of one cointegrating relationship, r=1. 
+
+```{r}
+coint_opec <- ca.jo(Y_opec, type = "eigen", ecdet = "trend", K = 2, spec = "longrun", season=12)
+coint_oecd <- ca.jo(Y_oecd, type = "eigen", ecdet = "trend", K = 2, spec = "longrun", season=12)
+coint_world <- ca.jo(Y_wor, type = "eigen", ecdet = "trend", K = 2, spec = "longrun", season=12)
+coint_world
+coint_world@cval
+```
+
+
+<br> 
+
+3. Estimation and forecasts: the global model 
+
+```{r}
+vecm_world <- VECM(Y_wor, lag=2, r = 1, include = "both", beta = NULL, estim = "ML", exogen = X)
+forc.world <- predict(vecm_world, n.ahead = nrow(X_forc), exoPred =X_forc)
+
+vecm_world_log <- VECM(Y_wor_log, lag=2, r = 1, include = "both", beta = NULL, estim = "ML", exogen = X)
+forc.world.log <- predict(vecm_world_log, n.ahead = nrow(X_forc), exoPred =X_forc)
+
+
+#OPEC
+vecm_opec<- VECM(Y_opec, lag=2, r = 1, include = "both", beta = NULL, estim = "ML", exogen = X)
+forc.opec <- predict(vecm_opec, n.ahead = nrow(X_forc), exoPred =X_forc)
+
+vecm_opec_log <- VECM(Y_opec_log, lag=2, r = 1, include = "both", beta = NULL, estim = "ML", exogen = X)
+forc.opec.log <- predict(vecm_opec_log, n.ahead = nrow(X_forc), exoPred =X_forc)
+
+
+
+#OECD
+vecm_oecd <- VECM(Y_oecd, lag=2, r = 1, include = "both", beta = NULL, estim = "ML", exogen = X)
+forc.oecd <- predict(vecm_oecd, n.ahead = nrow(X_forc), exoPred =X_forc)
+
+vecm_oecd_log <- VECM(Y_oecd_log, lag=2, r = 1, include = "both", beta = NULL, estim = "ML", exogen = X)
+forc.oecd.log <- predict(vecm_oecd_log, n.ahead = nrow(X_forc), exoPred =X_forc)
+
+```
+
+Coefficient estimates: 
+
++ the long-run relationship between the oil market fundamentals is given by the cointegrating vector, normalized with respect to the first variable in the set of endogenous variables: 
+
+```{r}
+vecm_world$model.specific$coint
+```
+
+This represent the linear combination of the I(1) variables that is stationary. Thus, the long-run relationship is: 
+
+<br> 
+
+$Demand = 0.99*Supply + 0.00053*Price - 1.00907*Inventories$
+
+
+<br>
+
+In order to see how Brent prices are affected in the short run by an increase in oil supply or demand, we can analyze the second lagged coefficients of demand and supply of the equation where d.Pol is the dependent variable: not surprisingly, increases in demand have a positive impact while increases in supply have a negative effect on prices. 
+
+I used the second lag to allow some time to prices to adjust to these changes. 
+
+```{r}
+vecm_world$coefficients[3,8:9]
+```
+
+
+The rest of the coefficients are shown below: 
+
+```{r}
+vecm_world$coefficients
+```
+
+4. Compare forecasts to actual data: 
+
+```{r, fig.height=8, fig.width=6}
+brent_world <- ts(cbind(window(dt[,"POILBNT_WOR_M_FGI"], start=c(2016,11), end=c(2017,4)), 
+                        forc.world[,"POILBNT_WOR_M_FGI"]) ,start=c(2016,11), freq=12)
+
+demand_world <- ts(cbind(window(dt[,"D_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.world[,"D_WOR_LIQUIDS"]), start=c(2016,11), freq=12)
+
+
+
+production_world <- ts(cbind(window(dt[,"P_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.world[,"P_WOR_LIQUIDS"]), start=c(2016,11), freq=12)
+
+
+par(mfrow=c(3,1))
+plot(brent_world, ylim=range(39,60),plot.type=c("single"), col=1:2)
+plot(demand_world, plot.type=c("single"), col=1:2)
+plot(production_world, plot.type=c("single"), col=1:2)
+
+```
+
+
+
+<br>
+
+###Simulations with impulse-response functions 
+
+<br> 
+
+Test the impact of a positive shock to oil supply - measured as a positive one standard deviation of the oil supply series.
+
+Identify the shock by imposing sign restrictions on the responses of several variables. 
+
+
+```{r echo=FALSE, warning=FALSE}
+table <- rbind(Variables=c("Global demand","Global supply","Brent prices","Change in inventories"), 
+                         Shock=c("none", "+", "none","+"))
+pandoc.table(table,style = "grid", split.table = Inf, caption = "Sign restrictions for the global market", plain.ascii = TRUE)
+```
+
+
+Plot the responses of the system to a positive shock to global oil supply: 
+
+
+```{r echo=FALSE, warning=FALSE, results=FALSE}
+constr <- c(+2, +4)
+model.irf <- uhlig.penalty(Y=Y_wor, nlags=2, draws=2000, subdraws=1000,
+                        nkeep=1000, KMIN=1, KMAX=6, constrained=constr,
+                        constant=FALSE, steps=10, penalty=100, crit=0.001)
+
+
+irfs <- model.irf$IRFS
+
+vl <- c("Global demand","Global supply","Brent prices","Change in inventories")
+```
+
+```{r}
+irfplot(irfdraws=irfs, type="median", labels=vl, save=FALSE, bands=c(0.16, 0.84), 
+        grid=TRUE, bw=FALSE)
+
+```
+
+
+###Additional models 
+
+
+Plots of out-of-sample forecasts: 
+
+####WORLD
+
+```{r}
+brent_world <- ts(cbind(window(dt[,"POILBNT_WOR_M_FGI"], start=c(2016,11), end=c(2017,4)), 
+                        forc.world[,"POILBNT_WOR_M_FGI"]) ,start=c(2016,11), freq=12)
+brent_world_log <- ts(cbind(window(dt[,"POILBNT_WOR_M_FGI"], start=c(2016,11), end=c(2017,4)), 
+                        exp(forc.world.log[,"POILBNT_WOR_M_FGI"])) ,start=c(2016,11), freq=12)
+
+
+demand_world <- ts(cbind(window(dt[,"D_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.world[,"D_WOR_LIQUIDS"]),
+                   start=c(2016,11), freq=12)
+demand_world_log <- ts(cbind(window(dt[,"D_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), exp(forc.world.log[,"D_WOR_LIQUIDS"])),
+                   start=c(2016,11), freq=12)
+
+
+
+production_world <- ts(cbind(window(dt[,"P_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.world[,"P_WOR_LIQUIDS"]),
+                       start=c(2016,11), freq=12)
+production_world_log <- ts(cbind(window(dt[,"P_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), exp(forc.world.log[,"P_WOR_LIQUIDS"])),
+                       start=c(2016,11), freq=12)
+```
+
+```{r, fig.height=8, fig.width=6}
+par(mfrow=c(3,1))
+plot(brent_world, plot.type=c("single"), col=1:2)
+plot(demand_world, plot.type=c("single"), col=1:2)
+plot(production_world, plot.type=c("single"), col=1:2)
+```
+
+```{r,fig.height=8, fig.width=6}
+par(mfrow=c(3,1))
+plot(brent_world_log, plot.type=c("single"), col=1:2)
+plot(demand_world_log, plot.type=c("single"), col=1:2)
+plot(production_world_log, plot.type=c("single"), col=1:2)
+```
+
+####OPEC
+
+```{r}
+brent_opec <- ts(cbind(window(dt[,"POILBNT_WOR_M_FGI"], start=c(2016,11), end=c(2017,4)), forc.opec[,"POILBNT_WOR_M_FGI"]),
+                 start=c(2016,11), freq=12)
+brent_opec_log <- ts(cbind(window(dt[,"POILBNT_WOR_M_FGI"], start=c(2016,11), end=c(2017,4)), exp(forc.opec.log[,"POILBNT_WOR_M_FGI"])),
+                 start=c(2016,11), freq=12)
+
+
+demand_opec <- ts(cbind(window(dt[,"D_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.opec[,"D_WOR_LIQUIDS"]),
+                  start=c(2016,11), freq=12)
+demand_opec_log <- ts(cbind(window(dt[,"D_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), exp(forc.opec.log[,"D_WOR_LIQUIDS"])),
+                  start=c(2016,11), freq=12)
+
+
+production_opec <- ts(cbind(window(dt[,"P_OPEC_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.opec[,"P_OPEC_LIQUIDS"]),
+                      start=c(2016,11), freq=12)
+production_opec_log <- ts(cbind(window(dt[,"P_OPEC_LIQUIDS"], start=c(2016,11), end=c(2017,4)), exp(forc.opec.log[,"P_OPEC_LIQUIDS"])),
+                      start=c(2016,11), freq=12)
+```
+
+```{r, fig.height=8, fig.width=6}
+par(mfrow=c(3,1))
+plot(brent_opec, plot.type=c("single"), col=1:2)
+plot(demand_opec, plot.type=c("single"), col=1:2)
+plot(production_opec, plot.type=c("single"), col=1:2)
+```
+
+```{r, fig.height=8, fig.width=6}
+par(mfrow=c(3,1))
+plot(brent_opec_log, plot.type=c("single"), col=1:2)
+plot(demand_opec_log, plot.type=c("single"), col=1:2)
+plot(production_opec_log, plot.type=c("single"), col=1:2)
+```
+
+####OECD
+
+```{r}
+brent_oecd <- ts(cbind(window(dt[,"POILBNT_WOR_M_FGI"], start=c(2016,11), end=c(2017,4)), forc.oecd[,"POILBNT_WOR_M_FGI"]),
+                 start=c(2016,11), freq=12)
+brent_oecd_log <- ts(cbind(window(dt[,"POILBNT_WOR_M_FGI"], start=c(2016,11), end=c(2017,4)), exp(forc.oecd.log[,"POILBNT_WOR_M_FGI"])),
+                 start=c(2016,11), freq=12)
+
+
+demand_oecd <- ts(cbind(window(dt[,"D_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.oecd[,"D_OECD_LIQUIDS"]),
+                  start=c(2016,11), freq=12)
+demand_oecd_log <- ts(cbind(window(dt[,"D_WOR_LIQUIDS"], start=c(2016,11), end=c(2017,4)), exp(forc.oecd.log[,"D_OECD_LIQUIDS"])),
+                  start=c(2016,11), freq=12)
+
+
+production_oecd <- ts(cbind(window(dt[,"P_OPEC_LIQUIDS"], start=c(2016,11), end=c(2017,4)), forc.oecd[,"P_OPEC_LIQUIDS"]),
+                      start=c(2016,11), freq=12)
+production_oecd_log <- ts(cbind(window(dt[,"P_OPEC_LIQUIDS"], start=c(2016,11), end=c(2017,4)), exp(forc.oecd.log[,"P_OPEC_LIQUIDS"])),
+                      start=c(2016,11), freq=12)
+```
+
+```{r, fig.height=8, fig.width=6}
+par(mfrow=c(3,1))
+plot(brent_oecd, plot.type=c("single"), col=1:2)
+plot(demand_oecd, plot.type=c("single"), col=1:2)
+plot(production_oecd, plot.type=c("single"), col=1:2)
+```
+
+```{r, fig.height=8, fig.width=6}
+par(mfrow=c(3,1))
+plot(brent_oecd_log, plot.type=c("single"), col=1:2)
+plot(demand_oecd_log, plot.type=c("single"), col=1:2)
+plot(production_oecd_log, plot.type=c("single"), col=1:2)
+
+```

@@ -1,0 +1,219 @@
+---
+title: "Commitment of Trades and Twitter Sentiment"
+author: "Lou Zhang"
+date: "May 12, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+wants <- c("glmnet","lmtest", 'fpp', 'h2o', 'fUnitRoots','bsts',"tseries","lubridate", "stringr", "plyr", "dplyr","randomForest", "data.table", "forecast", "tidyr", "prophet",
+           "doSNOW", "RODBC", 'aod',"doParallel", "caret", "beepr", "mlbench", "corrplot", "usdm", "MASS", "dynlm", "nnet", 'igraph',
+           "foreach", "zoo","reshape2",'vars','devtools','d3Network',"beepr","MLmetrics","doBy","DataCombine","TSclust","dyn","car","rgp","e1071","tsoutliers",'infotheo','mRMRe')
+has   <- wants %in% rownames(installed.packages())
+if(any(!has)) install.packages(wants[!has])
+sapply(wants, require, character.only = TRUE)
+rm("wants","has")
+
+# Log-Modulus Transformation with Optional Constant for Zeroes
+# Note that this is reasonable for integers but not for values between -1 and +1
+# x = value
+# base = base (default e)
+# constant = constant to add to all values or just zeroes (default 1)
+# alwaysadd = whether to add constant to all values instead of just zeroes (default TRUE)
+logmod <- function(x, base=exp(1), constant=1, alwaysadd=TRUE) {
+  if (alwaysadd) {
+    ifelse(x != 0, sign(x)*log(abs(x) + constant, base=base), log(constant, base=base))
+  } else {
+    ifelse(x != 0, sign(x)*log(abs(x), base=base), log(constant, base=base))
+  }
+}
+
+
+#vlookup function
+
+vlookup <- function(ref, #the value or values that you want to look for
+                    table, #the table where you want to look for it; will look in first column
+                    column, #the column that you want the return data to come from,
+                    range=FALSE, #if there is not an exact match, return the closest?
+                    larger=FALSE) #if doing a range lookup, should the smaller or larger key be used?)
+{
+  if(!is.numeric(column) & !column %in% colnames(table)) {
+    stop(paste("can't find column",column,"in table"))
+  }
+  if(range) {
+    if(!is.numeric(table[,1])) {
+      stop(paste("The first column of table must be numeric when using range lookup"))
+    }
+    table <- table[order(table[,1]),] 
+    index <- findInterval(ref,table[,1])
+    if(larger) {
+      index <- ifelse(ref %in% table[,1],index,index+1)
+    }
+    output <- table[index,column]
+    output[!index <= dim(table)[1]] <- NA
+    
+  } else {
+    output <- table[match(ref,table[,1]),column]
+    output[!ref %in% table[,1]] <- NA #not needed?
+  }
+  dim(output) <- dim(ref)
+  output
+}
+
+```
+
+## Introduction
+
+This document investigates the relationship between the commitment of trades and Twitter sentiment. Commitment of trades data is provided by the CFTC and outlines aggregated trading activity for crude oil, including end-of-week swap positions and number of trades. Twitter sentiment is provided by Social Media Analytics, and quantifies aggregate Twitter sentiment towards crude oil in terms of standard deviations from the mean sentiment.
+
+```{r cars}
+#import reference tables and peek at the top 10 rows and a couple columns of each
+
+cot <- read.csv('cftc.csv')
+
+head(cot[,c(5,10:12)], 10)
+
+twitterSentiment <- read.csv("output.csv")
+
+head(twitterSentiment[,1:7], 10)
+
+
+```
+
+## Data Cleaning
+
+The data clearly needs to be cleaned and re-aggregated as they contain different (but overlapping) time periods as well as different recording frequencies. First, we focus on the cleaning the COT data. 
+
+```{r warning = FALSE}
+#create a datetime stamp
+cot$datetime <- as.Date(cot$report_date_as_yyyy_mm_dd,"%m/%d/%Y")
+
+#restrict to only crude oil data
+cotDisagg <- cot[cot$sourceset == 'COTD',]
+cotDisagg <- cot[cot$cftc_commodity_code == '67',]
+
+#aggregate data from different indices and different types of crude oil together
+cotDisagg <- aggregate(x = cotDisagg[,c(10:187)], 
+                              by = list(unique.values = cotDisagg$datetime), FUN = sum)
+
+
+#create variables necessary for clean merging and organize table
+cotDisagg$datetime <- cotDisagg$unique.values
+
+cotDisagg <- orderBy(~datetime, data = cotDisagg)
+
+cotDisaggCleaned <- cotDisagg
+
+cotDisaggCleaned[is.na(cotDisaggCleaned)] <- 0
+
+#peek at cleaned dataframe
+head(cotDisaggCleaned[,1:3], 10)
+
+```
+
+After we clean the COT data, we focus our attention on the Twitter sentiment data. This requires considerable cleaning as well to be in a usable form, especially in the time domain. 
+
+```{r warning = FALSE}
+#cleaning time periods and creating appropriate column names
+
+twitterSentiment$center.date <- as.Date(twitterSentiment$center.date,"%m/%d/%Y")
+
+tweetsAggregated <- aggregate(x = twitterSentiment, 
+                              by = list(unique.values = twitterSentiment$center.date), FUN = mean)
+
+tweetsAggregated$unique.values <- gsub(" ","",x = tweetsAggregated$unique.values)
+
+tweetsAggregatedClean <- tweetsAggregated
+
+tweetsAggregatedClean$unique.values <- gsub("/","-",x = tweetsAggregatedClean$unique.values)
+
+tweetsAggregatedClean <- separate(tweetsAggregatedClean, col = unique.values, into = c("Month","Day","Year"), sep = "-")
+
+tweetsAggregatedClean$datetime <- tweetsAggregatedClean$center.date
+
+tweetsAggregatedClean <- orderBy(~datetime, data = tweetsAggregatedClean)
+
+tweetsAggregatedClean <- Filter(function(x)!all(is.na(x)), tweetsAggregatedClean)
+
+#aggregate Twitter data by week, starting 12/28/2010 (a week before COT data starts)
+
+tweetsAggregatedClean <- tweetsAggregatedClean[tweetsAggregatedClean$datetime >= '2010-12-28',]
+
+datetimes <- tweetsAggregatedClean$datetime
+
+datetimes <- datetimes[seq(1, length(datetimes), 7)]
+
+tweetsAggregatedCleanWeekly <- tweetsAggregatedClean[,4:(ncol(tweetsAggregatedClean)-2),]
+
+tweetsAggregatedCleanWeekly$seven_day_index <- c(0, rep(1:(nrow(tweetsAggregatedCleanWeekly)-1)%/%7))
+
+tweetsAggregatedCleanWeekly <- group_by(tweetsAggregatedCleanWeekly, seven_day_index) %>%
+  summarise_all(.funs = mean)
+
+#lag Twitter data to be the week before, as COT data is for the week before
+
+colnames(tweetsAggregatedCleanWeekly) <- paste('PriorWeek', colnames(tweetsAggregatedCleanWeekly), sep = "")
+
+a <- as.data.frame(1:nrow(tweetsAggregatedCleanWeekly))
+list_names <- colnames(tweetsAggregatedCleanWeekly)
+
+for(i in 1:ncol(tweetsAggregatedCleanWeekly)){
+  
+  b <- as.data.frame(lag(tweetsAggregatedCleanWeekly[[i]]))
+  a <- cbind(a,b)
+  
+}
+
+tweetsAggregatedCleanWeekly <- a[,2:ncol(a)]
+colnames(tweetsAggregatedCleanWeekly) <- list_names
+
+tweetsAggregatedCleanWeekly$datetime <- datetimes
+
+#peek at cleaned data
+
+head(tweetsAggregatedCleanWeekly[,1:3], 10)
+
+```
+
+After cleaning both dataframes, we then proceed to join them before furthering our analysis. We also engineer a key variable, "Net Length", as advised by subject matter expert Karim Fawaz. "Net Length" is calculated by taking the difference in the change of long positions to the change in short positions. It is effectively a representation of how bullish (high net length) or bearish (low or negative net length) the market is, and should in theory correlate best with Twitter sentiment.
+
+```{r}
+#join frames by datetime
+
+cotTweets <- join(tweetsAggregatedCleanWeekly, cotDisagg)
+
+cotTweets$datetime <- NULL
+cotTweets$unique.values <- NULL
+
+cotTweets[is.na(cotTweets)] <- 0
+
+cotTweets$datetime <- datetimes
+
+cotTweets$NetLength <- cotTweets$change_in_m_money_long_all - cotTweets$change_in_m_money_short_all
+
+head(cotTweets[,14:16], 10)
+
+```
+
+## Exploratory Data Analysis
+
+Finally, we are able to take a look at the variable importance chart and confirm our expert's hypothesis that Net Length is the most meaningful correlate to Twitter sentiment. We use a random forest model to construct a variable importance plot.
+
+```{r}
+#variable importance plot
+
+n <- names(cotTweets[,16:ncol(cotTweets)])
+f <- as.formula(paste("PriorWeeks.score ~", paste(n[!n %in% c("PriorWeeks.score", 'change_in_m_money_long_all', 'change_in_m_money_short_all')], collapse = " + ")))
+
+cotTweetsTrain <- head(cotTweets, nrow(cotTweets)*2/3)
+cotTweetsTest <- tail(cotTweets, nrow(cotTweets)-(nrow(cotTweets) * 2/3))
+
+rf <- randomForest(f, data= cotTweetsTrain)
+varImpPlot(rf, main = 'Top 10 variables in predicting sentiment score', n.var = 10)
+
+```
+
+
+

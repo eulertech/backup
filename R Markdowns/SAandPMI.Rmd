@@ -1,0 +1,356 @@
+---
+title: "Simulated Annealing and Mutual Information"
+author: "Lou Zhang"
+date: "April 5th, 2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+```{r, message=FALSE, include=FALSE, echo=FALSE}
+wants <- c("glmnet","lmtest", 'bsts',"tseries","lubridate", "stringr", "plyr", "dplyr","randomForest", "data.table", "forecast", "tidyr", "prophet",
+           "doSNOW", "RODBC", "doParallel", "caret", "beepr", "mlbench", "corrplot", "usdm", "MASS", "dynlm", "nnet", 'igraph',
+           "foreach", "zoo","reshape2","beepr","MLmetrics","doBy","DataCombine","TSclust","dyn","car","rgp","e1071","tsoutliers",'infotheo','mRMRe')
+has   <- wants %in% rownames(installed.packages())
+if(any(!has)) install.packages(wants[!has])
+sapply(wants, require, character.only = TRUE)
+rm("wants","has")
+
+
+#vlookup function
+
+vlookup <- function(ref, #the value or values that you want to look for
+                    table, #the table where you want to look for it; will look in first column
+                    column, #the column that you want the return data to come from,
+                    range=FALSE, #if there is not an exact match, return the closest?
+                    larger=FALSE) #if doing a range lookup, should the smaller or larger key be used?)
+{
+  if(!is.numeric(column) & !column %in% colnames(table)) {
+    stop(paste("can't find column",column,"in table"))
+  }
+  if(range) {
+    if(!is.numeric(table[,1])) {
+      stop(paste("The first column of table must be numeric when using range lookup"))
+    }
+    table <- table[order(table[,1]),] 
+    index <- findInterval(ref,table[,1])
+    if(larger) {
+      index <- ifelse(ref %in% table[,1],index,index+1)
+    }
+    output <- table[index,column]
+    output[!index <= dim(table)[1]] <- NA
+    
+  } else {
+    output <- table[match(ref,table[,1]),column]
+    output[!ref %in% table[,1]] <- NA #not needed?
+  }
+  dim(output) <- dim(ref)
+  output
+}
+
+
+# Log-Modulus Transformation with Optional Constant for Zeroes
+# Note that this is reasonable for integers but not for values between -1 and +1
+# x = value
+# base = base (default e)
+# constant = constant to add to all values or just zeroes (default 1)
+# alwaysadd = whether to add constant to all values instead of just zeroes (default TRUE)
+logmod <- function(x, base=exp(1), constant=1, alwaysadd=TRUE) {
+  if (alwaysadd) {
+    ifelse(x != 0, sign(x)*log(abs(x) + constant, base=base), log(constant, base=base))
+  } else {
+    ifelse(x != 0, sign(x)*log(abs(x), base=base), log(constant, base=base))
+  }
+}
+
+```
+
+```{r, message=FALSE, include=FALSE, echo=FALSE}
+setwd("C:\\Users\\Viu52790\\Desktop\\Energy\\Modeling")
+
+reftable <- read.csv("reftable.csv")
+reftable$series_id <- sub("^", "v", reftable$series_id)
+reftable$series_id <- sub("vv", "v", reftable$series_id)
+MonthlySeriesA <- read.csv("original2.csv")
+
+#remove oil price series 
+
+oil <- c('v175310959','v134253300','v134253301','v175310959','v134253301','v175310959','v151387513','v153100429','v167792729','v167792760','v12905340','v167792843','v151387540','v151387541','v167792874','v1103596636','v16136954','v167792719','v12637810','v14326136','v153100430','v16136957','v12638003','v151387542','v151387512','v127401234','v180123009','v12638005','v16136955','v164401578','v167792833','v167792888','v16137003','v151124975','v167792762','v124220223','v151368216','v124220225','v167792761','v178708765','v167792875','v151387504','v175309942','v133629970','v175309941','v156653965','v163438224','v188509022','v175309567','v12511714','v12637814','v156653101','v153100174','v180946093','v12511866','v168704178','v168704177','v151124966','v130144523','v178708763','v12637812','v151124965','v12509208','v180122938','v169800232','v157568507','v142001988','v16137039')
+
+MonthlySeriesA <- MonthlySeriesA[ , !(names(MonthlySeriesA) %in% oil)]
+MonthlySeriesA <- MonthlySeriesA[,4:ncol(MonthlySeriesA)]
+MonthlySeriesA <- head(MonthlySeriesA, 192)
+
+oilProductionByMonth <- read.csv('MonthlyOilProduction.csv', header = FALSE)
+
+oilProductionByMonth <- oilProductionByMonth[,5:6]
+
+oilProductionByMonth <- tail(oilProductionByMonth,192)
+
+oilProductionByMonth <- as.data.frame(oilProductionByMonth[,2])
+
+#predictor restrictions to geo
+
+inclgeo <- c('64','190','244','70','17','144','146','80','81','231','232','153','82','235','210','165','166','70','170','239','111','11671','172','114','241','178','257','226')
+
+reftableConsidered <- reftable[reftable$geo %in% inclgeo,]
+
+MonthlySeriesA <- MonthlySeriesA[colnames(MonthlySeriesA) %in% reftableConsidered$series_id]
+
+MonthlySeriesA <- cbind(MonthlySeriesA, oilProductionByMonth)
+
+#conduct differencing and LOG the predictors
+
+AR <- slide(oilProductionByMonth, Var = colnames(oilProductionByMonth), slideBy = -1)
+AR <- AR[2]
+
+AR[is.na(AR)] <- 0
+colnames(AR) <- "AR"
+
+oilProductionByMonth <- (oilProductionByMonth - AR) / AR
+oilProductionByMonth <- as.data.frame(oilProductionByMonth)
+oilProductionByMonth[1,] <- 0
+
+colnames(oilProductionByMonth) <- 'target'
+
+list_predictors <- colnames(MonthlySeriesA)
+
+k <- data.frame(1:nrow(MonthlySeriesA))
+
+for(i in 1:ncol(MonthlySeriesA)){
+  j <- logmod(x = MonthlySeriesA[[i]])
+  k <- cbind(k,j)
+}
+
+MonthlySeriesA <- k
+MonthlySeriesA[is.na(MonthlySeriesA)] <- 0
+MonthlySeriesA <- MonthlySeriesA[2:ncol(MonthlySeriesA)]
+colnames(MonthlySeriesA) <- list_predictors
+
+MonthlySeriesASlide <- (1:192)
+k <- as.data.frame(1:192)
+
+for(i in 1:(ncol(MonthlySeriesA))){
+  MonthlySeriesASlide <- cbind(slide(MonthlySeriesA, Var = colnames(MonthlySeriesA[i]), slideBy = -1))
+  
+  j <- MonthlySeriesASlide[ncol(MonthlySeriesASlide)]
+  k <- cbind(k,j)
+}
+
+k <- k[2:ncol(k)]
+colnames(k) <- gsub("-1","",colnames(k))
+k[is.na(k)] <- 0
+
+MonthlySeriesA <- (MonthlySeriesA - k)/k
+
+list_names <- colnames(MonthlySeriesA)
+
+
+for(i in 1:ncol(MonthlySeriesA)){
+  
+  MonthlySeriesA[[i]][is.infinite(MonthlySeriesA[[i]])] <-0
+  MonthlySeriesA[[i]][is.na(MonthlySeriesA[[i]])] <-0
+  
+  
+}
+
+```
+
+###Introduction
+
+Simulated Annealing and Mutual Information are methods for determining feature relevance when presented with a multivariate problem. This document will discuss a brief theoretical background behind these methods, the code used to execute them in R, an evaluation of the results, and their suitability for the EAA project.
+
+The data has been pre-processed to be stationary and remove heteroskedasticity. A table is loaded with cleaned data from IDDS before any algorithms are executed.
+
+###Simulated Annealing
+
+Simulated Annealing comes from the concept of annealing in metalworking, when metalworkers would heat a piece of metal to a very high temperature and then let it cool in a controlled fashion. As it cooled, the metalworkers would alter the properties of the piece of metal to the optimal shape, size, and properties.
+
+In the 1980s, engineers took this idea and used it to "simulate annealing" in computer programs to find the optimal set of variables from a larger set of variables. The algorithm starts very "hot" and jumps around in the feature space to try and find the local optimas, but as it "cools", settles on a tighter location with the highest likelihood of finding the global optimum to isolate the optimal combination of variables. 
+
+The key advantage behind simulated annealing is its ability to quickly find the optimal combination of variables, which represents the feature space optimally tuned to predict the target variable.
+
+An illustration can be seen below:
+
+*Simulated Annealing in Action - notice how the algorithm iterates to find the global optimum*
+
+![](SAGIF.gif "Simulated Annealing")
+
+
+The literature suggests that simulated annealing is not entirely appropriate for time series. A paper published by the Head of Quantitative Research at JP Morgan specifically points this out:
+
+
+*"SA looks highly promising for portfolio optimisation and asset allocation problems [which are not time series problems], because the driving variables are highly nonlinear, noisy and often chaotic; it appears less appropriate for modelling financial time series." [http://www.aiinfinance.com/saweb.pdf]*
+
+A simple experiment on IDDS data confirms this. The variables selected from simulated annealing are entirely different from the ones selected from random forest, mutual information, and LASSO, and make less intuitive sense when the target is oil production. 
+
+###Execute Simulated Annealing Algorithm
+```{r, eval = FALSE}
+sc <- safsControl(functions = rfSA,
+                  method = "repeatedcv",
+                  repeats = 5,
+                  improve = 50)
+
+obj <- safs(x = MonthlySeriesA,
+            y = oilProductionByMonth[[1]],
+            iters = 5, safsControl = sc)
+
+vars <- as.data.frame(sort(table(unlist(obj$resampled_vars)), decreasing = TRUE))
+
+vars$description <- vlookup(ref = vars$Var1,table = reftable[,2:ncol(reftable)],column = 11)
+
+```
+
+```{r}
+vars$description <- substr(vars$description, 1, 40)
+
+head(vars[,2:3], 20)
+
+```
+
+As a comparison against random forest, mutual information, and LASSO, you can see there is virtually no overlap in the top 20 variables selected from the other methods (numbers indicate rank).
+
+```{r fig.width=8, fig.height=5,echo=FALSE}
+library(png)
+library(grid)
+img <- readPNG("C:\\Users\\Viu52790\\Desktop\\Energy\\Modeling\\Feature Selection Scripts\\Simulated Annealing\\SAExcel.PNG")
+grid.raster(img)
+```
+
+###Mutual Information
+
+Mutual Information is a way to evaluate the "relatedness" of two series in a nonlinear fashion. It can be thought of as the amount of information gained about one variable from knowing about another variable. It measures how much "information" two series share, and therefore how much uncertainty is reduced in one series by knowing about another. Mathematically, it is expressed as:
+
+```{r fig.width=2, fig.height=1,echo=FALSE}
+library(png)
+library(grid)
+img <- readPNG("C:\\Users\\Viu52790\\Desktop\\Energy\\Modeling\\Feature Selection Scripts\\Partial Mutual Information\\mutualinfo.PNG")
+grid.raster(img)
+```
+
+where $p(E_{ij},E_{jm})$ is the joint probability distribution function of $E_{ij}$ and $E_{jm}$, and $p(E_{ij})$ and $p(E_{jm})$) are the marginal probability distribution functions of $E_{ij}$ and $E_{jm}$ respectively. Essentially, it measures the amount of uncertainty reduced in one variable just by knowing about the values of another variable.
+
+###Execute Mutual Information Algorithm
+```{r}
+
+#discretize the data into 4 bins - must be discretized to use package 
+
+a <- MonthlySeriesA
+
+aDisc <- as.data.frame(1:nrow(a))
+
+for(i in 1:ncol(a)){
+  
+aDisc[i] <- discretize(a[i] , nbins = 4)
+
+}
+
+oilProductionByMonthDisc <- discretize(oilProductionByMonth, nbins = 4)
+
+colnames(oilProductionByMonthDisc) <- 'Oil Production Discretized'
+
+head(oilProductionByMonthDisc, 20)
+
+```
+
+```{r}
+
+#execute MI algorithm
+
+k <- as.data.frame(1:ncol((a)))
+
+for(i in 1:ncol(aDisc)){
+  b <- mutinformation(oilProductionByMonthDisc, aDisc[i])
+  k[i,] <- b
+}
+
+rownames(k) <- colnames(a)
+
+MutInfo <- k
+MutInfo$description <- vlookup(ref = rownames(MutInfo),table = reftable[,2:ncol(reftable)],column = 11)
+
+MutInfo$description <- substr(MutInfo$description, 1, 60)
+
+MutInfoUnique <- MutInfo[!duplicated(MutInfo$description), ] 
+
+MutInfoUnique <- na.omit(MutInfoUnique)
+
+colnames(MutInfoUnique) <- c('Mutual Information','Description')
+
+MutInfoUnique <- as.data.frame(MutInfoUnique[ order(-MutInfoUnique[,1]), ])
+
+rownames(MutInfoUnique) <- MutInfoUnique$Description
+
+head(MutInfoUnique[1], 20)
+
+
+```
+
+```{r}
+
+#discretize the data into 20 bins - observe differences
+
+a <- MonthlySeriesA
+
+aDisc <- as.data.frame(1:nrow(a))
+
+for(i in 1:ncol(a)){
+  
+aDisc[i] <- discretize(a[i] , nbins = 20)
+
+}
+
+oilProductionByMonthDisc <- discretize(oilProductionByMonth, nbins = 20)
+
+colnames(oilProductionByMonthDisc) <- 'Oil Production Discretized'
+
+head(oilProductionByMonthDisc, 20)
+
+```
+
+```{r}
+
+#execute MI algorithm
+
+k <- as.data.frame(1:ncol((a)))
+
+for(i in 1:ncol(aDisc)){
+  b <- mutinformation(oilProductionByMonthDisc, aDisc[i])
+  k[i,] <- b
+}
+
+rownames(k) <- colnames(a)
+
+MutInfo <- k
+MutInfo$description <- vlookup(ref = rownames(MutInfo),table = reftable[,2:ncol(reftable)],column = 11)
+
+MutInfo$description <- substr(MutInfo$description, 1, 60)
+
+MutInfoUnique <- MutInfo[!duplicated(MutInfo$description), ] 
+
+MutInfoUnique <- na.omit(MutInfoUnique)
+
+colnames(MutInfoUnique) <- c('Mutual Information','Description')
+
+MutInfoUnique <- as.data.frame(MutInfoUnique[ order(-MutInfoUnique[,1]), ])
+
+rownames(MutInfoUnique) <- MutInfoUnique$Description
+
+head(MutInfoUnique[1], 20)
+
+
+```
+
+
+###Conclusions
+
+As we can see, mutual information is the superior of the two methods - it is able to process time series data and gives us more meaningful features, which are alinged with the other feature selection methods.
+
+Mutual information should be tuned before used for feature selection - the discretization and variable transforms can drastically change the outcome of our results.
+
+Simulated annealing is not appropriate for time series data, and this is confirmed with a quick empirical test, yielding results which are drastically dissimilar from other better-known methods.
+

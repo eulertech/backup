@@ -1,0 +1,330 @@
+---
+title: "Trend direction forecasts with window trading"
+author: "Mihaela Solcan"
+date: "20 April 2017"
+output:
+  html_document:
+    fig_height: 4
+    fig_width: 7
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+###Overview
+
+This note summarizes some of the techniques used in financial markets to predict the direction of stock price changes. The industry refers to these techniques as **technical analysis**, widely used to design trading algorithms. 
+
+The data used in the examples below are monthly Brent Crude Oil Spot prices, downloaded from EIA. The experimental results below used technical indicators and time series models to forecast Brent Spot prices. 
+
+###Load the packages
+
+```{r warning=FALSE}
+suppressPackageStartupMessages({
+library(knitr)
+library(pander)
+library(dygraphs)  
+library(zoo)  
+library(quantmod)
+library(TTR)  
+library(Quandl)
+})
+```
+###Download Brent Spot Prices from EIA
+
+```{r}
+brent <- Quandl("EIA/PET_RBRTE_D", collapse="monthly", type="ts")
+```
+
+```{r, fig.width=7, fig.height=4}
+dygraph(brent, main = "Brent Spot Prices") %>%
+  dyAxis("y", label = "US $/Barrel") %>%
+  dySeries("V1", label = "Brent ($/Barrel)") %>%
+  dyLegend(show = "follow")
+```
+
+<br> 
+
+###Overview of the main forecasting techniques used for financial data
+
+<br>
+
+The main techniques used to forecast financial stock prices can be summarized in three categories:
+
++ **fundamental analysis**, based on the market fundamentals: supply, demand, regulation, other events that are likely to influence prices. 
+
++ **technical analysis**, widely used by financial markets analysts, studies historical patterns in the price data to forecast future price trends. Technical analysis aims to forecast the price level itself and not the *fundamental* factors that are likely to affect market prices. The analysis of the drivers of changes in prices is know in finance as *fundamental analysis*. 
+The technical indicators are used as entry and exit signals (or market events) that trigger buy or sell orders of financial assets^[Moving averages (MA) are widely used in the financial world to predict the start of trends.Obviously, MA are lagged indicators as they reflect market action from the past, which is often considered a drawback.].
+
++ **time series forecasting** methods are widely used to forecast future price movements and quantify current conditions; smoothing time series is a widely adopted method to predict financial markets. 
+While AR(I)MA models are important methods of modelling time series data, including financial series, some of their limitations have detracted from their popularity, especially the assumption of a linear relationship and the need for a lot of data to produce accurate results. 
+
+In order to overcome the linearity assumption, hybrid models such as neural networks (NN) or support vector machines (SVM) in combination with ARIMA models have been proposed to predict financial time series. Several recent studies have shown that the combination of these techniques outperforms the individual models in terms of forecasting accuracy.  
+
+
+
+
+<br>
+
+###Window trading function (Patrick's concept) 
+
+<br>
+
+
+The function *window_trading* below computes the following price elements: 
+
++ $Price^{min}$: the lowest price over the trading window; 
++ $Price^{man}$: the highest price over the trading window; 
++ **Spread (aka stochastic oscillator)**: the level of the current price level over the min-max range over the trading window; this is a measure of the price momentum given by the following formula: 
+
+$$
+Spread_{t} = \frac{Price_{t} - Price^{min}_{t}}{Price^{max}_{t} - Price^{min}_{t}}
+$$
+
++ the **spread position** based on the following rule: 
+ 
+
+$$
+Position \ relative \ to \ spread= \left\{
+\begin{array}{ll}
+      Spread_{t-1} \le 0.8 \Rightarrow & position_{t} = Spread_{t-1}+0.1 \\
+      Spread_{t-1} > 0.8 \Rightarrow & position_{t} = Spread_{t-1} - 0.1 
+\end{array} 
+\right. 
+$$  
+
++ the expected price level, given the last observed position in the trading window: 
+
+$$
+Expected \ price = (Price^{max}_{t-1} - Price^{min}_{t-1})*Position_{t} + Price^{min}_{t-1}
+$$
+The function has three parameters: 
+
+1. the observed price data (*actual*); 
+2. the trading window (*window_period*); and
+3. the forecast horizon (*predictions*). 
+
+```{r}
+window_trading<-function(actual, window_period, predictions){
+  if (!is.null(actual) && !is.numeric(actual)) 
+        stop("'actual' must be a numeric vector")
+  x<-data.frame(actual=append(actual,rep(NA,predictions), after=length(actual)))
+  x$position<-NA
+  x$forecasts<-NA
+  x$year_low<-rollapplyr(x$actual, width=window_period, align="right",fill=NA, FUN=min)
+  x$year_high<-rollapplyr(x$actual, width=window_period, align="right",fill=NA, FUN=max)
+  x$spread<-((x$actual - x$year_low)/(x$year_high - x$year_low))
+  
+  for (i in ((nrow(x)-predictions+1):nrow(x))){
+    x$position[i] <- ifelse(x$spread[i-1]<=0.8,x$spread[i-1] + 0.1,x$spread[i-1]-0.1)
+    x$actual[i]<-(x$year_high[i-1] - x$year_low[i-1])*x$position[i] + x$year_low[i-1]
+    x$year_low[i]<-min(x$actual[(i+1-window_period):i])
+    x$year_high[i]<-max(x$actual[(i+1-window_period):i])
+    x$spread[i]<-((x$actual[i] - x$year_low[i])/(x$year_high[i] - x$year_low[i]))
+    x$forecasts[i]<-x$actual[i]
+  }
+  return(x)
+}
+
+```
+
+
+
+```{r, fig.width=7, fig.height=4}
+actual<-window(brent, end=c(2015,6))
+brent1<-window_trading(actual,window_period=12,predictions=(NROW(brent)-NROW(actual)))
+observed<-window(brent, start=c(2015,7))
+forecasts<-ts(na.omit(brent1$forecasts),start=c(2015,7),freq=12)
+
+chart2<-ts(cbind(observed=observed,forecasts=forecasts), start=c(2015,7),freq=12)
+
+dygraph(chart2, main="Brent 1-year window: forecasts vs. observed") %>%
+  dyLegend(show="follow")
+```
+
+<br> <br>
+
+###Technical Indicators - identify trend changes in stock prices 
+
+<br>
+
+The analysis of stock price changes, usually displayed in charts, is know as *technical analysis*. 
+Technical indicators represent features of the past evolution of the price series (e.g. high/low levels, changes in momentum, moving averages...etc) that give insights (signals) into the expected change in the direction of future prices. 
+
+Technical analysis differentiates between the various trends in stock prices: upward, downward, sideways (or consolidation). Trends are usually identified with moving averages as they smooth out fluctuations and make it easier to determine underlying trends.  
+
+
+
+```{r}
+brent_chart<-as.xts(brent)
+chartSeries(
+        brent_chart,up.col="blue", dn.col="blue",color.vol = FALSE,
+        theme = chartTheme("white"),
+        TA = c(addSMA(12)))
+```
+
+
+
+
+
+In addition to the spread measure used in the window trading function above, the following technical indicators are widely used in assessing the expected price behavior^[See Khaidem et al.(2016) *Predicting the direction of stock market pricees using random forest* available here: https://arxiv.org/pdf/1605.00003.pdf]:
+
+
+
+1. The **Relative Strength Index (RSI)** is a very popular measure of the price momentum which indicates whether a price is too high (the stock/commodity is overbought) or too low (oversold). The index ranges between 0 to 100 interpreted as follows:
+
+    + if the index is above 70 it indicates that the stock is overbought and it may signal a future dcrease in price; 
+    + when the index is below 30 it may indicate the stock is oversold. 
+
+
+The RSI is given by the following formula: 
+$$
+RSI = 100 - \frac{100}{1+RS} \\
+RS = \frac{Average \ gain \ over \ the \ trading \ widow \ (usually \ 14 \ days)}{Average \ loss \ over \ the \ trading \ widow \ (usually \ 14 \ days)}
+$$
+
+
+
+2. **Williams %R** ranges between -100 to 0:
+    + if the index is above -20 it indicates a sell signal
+    + when the index is below -80 it indicates a buy signal. 
+    
+The formula: 
+
+$$
+ \%R = \frac{(P^{max} - Price_{t})}{(P^{max} - P^{min})}* -100
+$$
+where $P^{min}$ and $P^{max}$ represent the lowest and the highest prices over the trading window. 
+
+<br>
+
+3. The **Moving Average Convergence Divergence (MACD)** given by: 
+
+$$
+MACD= EMA_{12}(P_{t}) - EMA_{26}(P_{t})\\
+Signal \ Line = EMA_{9}(MACD)
+$$
+
+Where $EMA_{n}$ = n day Exponential Moving Average. When MACD goes below (above) the Signal Line it indicates a sell (buy) signal. **Moving Average Convergence/Divergence (MACD)** is a trend following indicator that is formed from two moving averages. The value of the MACD is the difference between two EMA: a "slower" (e.g. 12 months) and a "faster" (e.g. 4 months) value. In addition, an EMA of the MACD value is calculated, set to 1 month, which acts as a "signal" line. MACDs are usually used to: 
+
++ derive the general trend of the price series
++ identify periods when the market is "over-bought" or "over-sold" and can be expected to change direction.
+
+
+If the value of the MACD exceeds the signal it is considered "bullish" and the market is expected to rise in price. MACDs are also sometimes used as trend reversal indicators, for example, when the faster MA moves sharply away from the slow MA.
+
+```{r}
+brent_chart<-as.xts(brent)
+chartSeries(
+        brent_chart,up.col="blue", dn.col="blue",color.vol = FALSE,
+        theme = chartTheme("white"),
+        TA = c(addMACD(4,12,1)))
+```
+
+<br>
+
+
+4. The **Price Rate of Change (PROC)** measures the most recent change in price relative to $n$ days ago and is calculated as follows: 
+
+$$
+PROC_{t} = \frac{P_{t} - P_{t-n}}{P_{t-n}}
+$$
+
+
+<br> 
+
+###Predict Brent trend with with the RSI in combination with an AR model
+
+
+```{r}
+window_rsi<-function(actual, window_period, predictions){
+  if (!is.null(actual) && !is.numeric(actual)) 
+    stop("'actual' must be a numeric vector")
+
+  
+  rsi<-RSI(actual, window_period)
+  rsi<-data.frame(rsi=append(rsi,rep(NA,predictions), after=length(rsi)))
+  x<-data.frame(actual=append(actual,rep(NA,predictions), after=length(actual)),rsi)
+  x$forecasts<-NA
+  x$position<-NA
+  
+  for (i in ((nrow(x)-predictions+1):nrow(x))){
+    x$position[i] <- ifelse(x$rsi[i-1] >=70, "decrease","increase")
+    
+    x$actual[i]<-ifelse(x$position[i] == "decrease", (predict(ar(x$actual[1:(i-1)],aic=TRUE))$pred - 0.2*x$actual[i-1]), 
+                                                     (predict(ar(x$actual[1:(i-1)],aic=TRUE))$pred + 0.05*x$actual[i-1]))
+    x$rsi[i]<-na.omit(RSI(x$actual[(i-(1+window_period)):(i-1)], window_period))
+    x$forecasts[i]<-x$actual[i]
+  }
+return(x)
+}
+
+```
+
+
+
+```{r, fig.width=7, fig.height=4}
+actual<-window(brent, end=c(2015,6))
+
+brent2<-window_rsi(actual,window_period=6,predictions=(NROW(brent)-NROW(actual)))
+observed2<-window(brent, start=c(2015,7))
+forecasts2<-ts(na.omit(brent2$forecasts),start=c(2015,7),freq=12)
+
+chart3<-ts(cbind(observed=observed2,forecasts=forecasts2), start=c(2015,7),freq=12)
+
+dygraph(chart3, main="Brent 6-month window RSI: forecasts vs. observed") %>%
+  dyLegend(show="follow")
+```
+
+
+<br> 
+
+###Predict Brent trend with MACD in combination with an AR model
+
+
+```{r}
+window_macd<-function(actual, Fast, Slow, Sig, predictions){
+  if (!is.null(actual) && !is.numeric(actual)) 
+    stop("'actual' must be a numeric vector")
+  
+  macd<-MACD(actual, nFast=Fast, nSlow=Slow, nSig=Sig)
+  col<-matrix(NA, nrow=predictions, ncol=ncol(macd))
+  macd<-data.frame(rbind(macd,col))
+  
+  x<-data.frame(actual=append(actual,rep(NA,predictions), after=length(actual)),macd)
+  x$forecasts<-NA
+  x$position<-NA
+  
+  for (i in ((nrow(x)-predictions+1):nrow(x))){
+    x$position[i] <- ifelse(x$macd[i-1] >= x$signal[i-1], "increase","decrease")
+    
+    x$actual[i]<-ifelse(x$position[i] == "decrease", (predict(ar(x$actual[1:(i-1)],aic=TRUE))$pred - 0.01*x$actual[i-1]), 
+                        (predict(ar(x$actual[1:(i-1)],aic=TRUE))$pred + 0.01*x$actual[i-1]))
+    
+    x$macd[(i-Sig+1):i]<-na.omit(MACD(x$actual[(i-Slow-Sig+1):(i-1)], Fast,Slow,Sig)[,"macd"])
+    x$signal[i]<-na.omit(MACD(x$actual[(i-Slow-Sig+1):(i-1)], Fast,Slow,Sig)[,"signal"])
+    
+    x$forecasts[i]<-x$actual[i]
+  }
+  return(x)
+}
+
+```
+
+
+
+```{r, fig.width=7, fig.height=4}
+actual<-window(brent, end=c(2015,6))
+
+brent3<-window_macd(actual=actual, Fast=3, Slow=9, Sig=2,predictions=(NROW(brent)-NROW(actual)))
+observed3<-window(brent, start=c(2015,7))
+forecasts3<-ts(na.omit(brent3$forecasts),start=c(2015,7),freq=12)
+
+chart4<-ts(cbind(observed=observed3,forecasts=forecasts3), start=c(2015,7),freq=12)
+
+dygraph(chart4, main="Brent 9-month window MACD: forecasts vs. observed") %>%
+  dyLegend(show="follow")
+```

@@ -1,0 +1,316 @@
+---
+title: "Aggregated Table Function"
+output:
+  html_document: default
+  html_notebook: default
+---
+###Introduction
+
+This notebook outlines the logic and code behind creating the aggregated table function for the EAA project. The goal of this function is to be able to take any dataframe with the first column as the target variable and the remaining columns as predictor variables, and return a rank order of the significance of each predictor as it relates to the target. Thus, the true value-add is the ability to quickly change predictors and targets, and using the same function, come up with an entirely new set of preferred predictors. In addition, the ranking metric is highly modular and can be changed by experts to alter the ranks of the predictors to be more domain-appropriate. 
+
+The execution of the function itself covers several sequential steps, all of which are necessary to ensure a successful output. The steps are outlined below and expanded upon in each section of the notebook. We first break out the individual steps of the function and then present the function as a whole.
+
+1. Scale features
+2. Loop through variable selection tests
+3. Aggregate results of variable selection tests into one dataframe
+4. Create BlendedScore variable to determine variable ranks
+5. Verify results for accuracy 
+
+```{r, message=FALSE, include=FALSE, echo=FALSE, eval = FALSE}
+
+wants <- c("glmnet","lmtest", 'bsts',"tseries","lubridate", "stringr", "plyr", "dplyr","randomForest", "data.table", "forecast", "tidyr", "prophet", 'gsubfn',
+           "doSNOW", "RODBC", "doParallel", "caret", "beepr", "mlbench", "corrplot", "usdm", "MASS", "dynlm", "nnet", 'igraph',
+           "foreach", "zoo","reshape2","beepr","MLmetrics","doBy","DataCombine","TSclust","dyn","car","rgp","e1071","tsoutliers",'infotheo','mRMRe')
+has   <- wants %in% rownames(installed.packages())
+if(any(!has)) install.packages(wants[!has])
+sapply(wants, require, character.only = TRUE)
+rm("wants","has")
+
+
+#vlookup function
+
+vlookup <- function(ref, #the value or values that you want to look for
+                    table, #the table where you want to look for it; will look in first column
+                    column, #the column that you want the return data to come from,
+                    range=FALSE, #if there is not an exact match, return the closest?
+                    larger=FALSE) #if doing a range lookup, should the smaller or larger key be used?)
+{
+  if(!is.numeric(column) & !column %in% colnames(table)) {
+    stop(paste("can't find column",column,"in table"))
+  }
+  if(range) {
+    if(!is.numeric(table[,1])) {
+      stop(paste("The first column of table must be numeric when using range lookup"))
+    }
+    table <- table[order(table[,1]),] 
+    index <- findInterval(ref,table[,1])
+    if(larger) {
+      index <- ifelse(ref %in% table[,1],index,index+1)
+    }
+    output <- table[index,column]
+    output[!index <= dim(table)[1]] <- NA
+    
+  } else {
+    output <- table[match(ref,table[,1]),column]
+    output[!ref %in% table[,1]] <- NA #not needed?
+  }
+  dim(output) <- dim(ref)
+  output
+}
+
+
+# Log-Modulus Transformation with Optional Constant for Zeroes
+# Note that this is reasonable for integers but not for values between -1 and +1
+# x = value
+# base = base (default e)
+# constant = constant to add to all values or just zeroes (default 1)
+# alwaysadd = whether to add constant to all values instead of just zeroes (default TRUE)
+logmod <- function(x, base=exp(1), constant=1, alwaysadd=TRUE) {
+  if (alwaysadd) {
+    ifelse(x != 0, sign(x)*log(abs(x) + constant, base=base), log(constant, base=base))
+  } else {
+    ifelse(x != 0, sign(x)*log(abs(x), base=base), log(constant, base=base))
+  }
+}
+
+```
+
+```{r}{r, message=FALSE, include=FALSE, echo=FALSE, eval = FALSE}
+
+#import reference table
+
+reftable <- read.csv("reftable.csv")
+reftable$series_id <- sub("^", "v", reftable$series_id)
+reftable$series_id <- sub("vv", "v", reftable$series_id)
+
+reftable$X <- NULL
+
+#import monthly oil production data and predictors
+
+MonthlySeriesA <- read.csv("original2.csv")
+oil <- c('v175310959','v134253300','v134253301','v175310959','v134253301','v175310959','v151387513','v153100429','v167792729','v167792760','v12905340','v167792843','v151387540','v151387541','v167792874','v1103596636','v16136954','v167792719','v12637810','v14326136','v153100430','v16136957','v12638003','v151387542','v151387512','v127401234','v180123009','v12638005','v16136955','v164401578','v167792833','v167792888','v16137003','v151124975','v167792762','v124220223','v151368216','v124220225','v167792761','v178708765','v167792875','v151387504','v175309942','v133629970','v175309941','v156653965','v163438224','v188509022','v175309567','v12511714','v12637814','v156653101','v153100174','v180946093','v12511866','v168704178','v168704177','v151124966','v130144523','v178708763','v12637812','v151124965','v12509208','v180122938','v169800232','v157568507','v142001988','v16137039')
+
+MonthlySeriesA <- MonthlySeriesA[ , !(names(MonthlySeriesA) %in% oil)]
+MonthlySeriesA <- MonthlySeriesA[,4:ncol(MonthlySeriesA)]
+MonthlySeriesA <- head(MonthlySeriesA, 192)
+
+oilProductionByMonth <- read.csv('MonthlyOilProduction.csv', header = FALSE)
+
+oilProductionByMonth <- oilProductionByMonth[,5:6]
+
+oilProductionByMonth <- tail(oilProductionByMonth,192)
+
+oilProductionByMonth <- as.data.frame(oilProductionByMonth[,2])
+
+##PART 2: DATA MANIPULATION AND DIFFERENCING##
+
+#conduct differencing and LOG the predictors
+
+AR <- slide(oilProductionByMonth, Var = colnames(oilProductionByMonth), slideBy = -1)
+AR <- AR[2]
+
+AR[is.na(AR)] <- 0
+colnames(AR) <- "AR"
+
+oilProductionByMonth <- (oilProductionByMonth - AR) / AR
+oilProductionByMonth <- as.data.frame(oilProductionByMonth)
+oilProductionByMonth[1,] <- 0
+
+colnames(oilProductionByMonth) <- 'target'
+
+list_predictors <- colnames(MonthlySeriesA)
+
+k <- data.frame(1:nrow(MonthlySeriesA))
+
+for(i in 1:ncol(MonthlySeriesA)){
+  j <- logmod(x = MonthlySeriesA[[i]])
+  k <- cbind(k,j)
+}
+
+MonthlySeriesA <- k
+MonthlySeriesA[is.na(MonthlySeriesA)] <- 0
+MonthlySeriesA <- MonthlySeriesA[2:ncol(MonthlySeriesA)]
+colnames(MonthlySeriesA) <- list_predictors
+
+MonthlySeriesASlide <- (1:192)
+k <- as.data.frame(1:192)
+
+for(i in 1:(ncol(MonthlySeriesA))){
+  MonthlySeriesASlide <- cbind(slide(MonthlySeriesA, Var = colnames(MonthlySeriesA[i]), slideBy = -1))
+  
+  j <- MonthlySeriesASlide[ncol(MonthlySeriesASlide)]
+  k <- cbind(k,j)
+}
+
+k <- k[2:ncol(k)]
+colnames(k) <- gsub("-1","",colnames(k))
+k[is.na(k)] <- 0
+
+MonthlySeriesA <- (MonthlySeriesA - k)/k
+
+list_names <- colnames(MonthlySeriesA)
+
+
+for(i in 1:ncol(MonthlySeriesA)){
+  
+  MonthlySeriesA[[i]][is.infinite(MonthlySeriesA[[i]])] <-0
+  MonthlySeriesA[[i]][is.na(MonthlySeriesA[[i]])] <-0
+  
+  
+}
+
+df <- cbind(oilProductionByMonth, MonthlySeriesA)
+
+```
+###Scale and clean the incoming data frame if user specifies scale=TRUE
+
+```{r, eval = FALSE}
+ 
+#scale all columns between 0 and 1 to normalize results
+
+if(scaled == TRUE){
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+for(i in 1:ncol(df)){
+  df[i] <- range01(df[i])
+}
+}
+
+df[is.na(df)] <- 0
+df[colSums(df) == 0] <- NULL
+```
+
+###Run through the various feature selection tests, adding a variable for scaled results from 0 to 1 for each function if not native to the function
+
+```{r, eval = FALSE}
+
+#run through LASSO
+
+lasso <- EaaLASSO(df)
+colnames(lasso) <- c('coef.name','LASSOvalue', 'LASSOScaled')
+lasso[is.na(lasso)] <- 0
+
+#run through Mutual Information
+
+mi <- EaaMutualInfo(df)
+mi$coef.name <- rownames(mi)
+colnames(mi) <- c('MutualInformation','MIScaled','coef.name')
+
+#run through Random Forest
+
+rf <- EaaRandomForest(df, numberTrees = 500)
+colnames(rf) <- c('coef.name','RFVariableImportance','RFNodePurity')
+
+rf$RFVariableImportanceScaled <- range01(as.numeric(as.character(rf$RFVariableImportance)))
+rf$RFNodePurityScaled <- range01(as.numeric(as.character(rf$RFNodePurity)))
+
+#run through Causality tests
+
+causality <- EaaTY_GNC_test(df)
+colnames(causality) <- c('PredictorCausesTarget','TargetCausesPredictor')
+
+causality$PredictorCausesTargetScaled <- 1-range01(causality$PredictorCausesTarget)
+causality$TargetCausesPredictorScaled <- 1-range01(causality$TargetCausesPredictor)
+causality$coef.name <- rownames(causality)
+
+#run through randomized LASSO
+
+
+```
+
+###Clean and aggregate together in one data frame - can switch variable selection methods in and out if need be
+
+```{r, eval = FALSE}
+
+aggTable <- join_all(list(lasso, mi, rf, causality), by='coef.name', type='left')
+
+```
+
+###View function in its entirety - this is how the function looks when executed in R
+
+```{r, eval = FALSE}
+
+#EaaAggAll takes several feature selection methods and aggregates them together in one data frame. You are required to feed it a dataframe with the target variable in the first column
+
+EaaAggAll <- function(df, scaled = TRUE){
+  
+if(scaled == TRUE){
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
+
+for(i in 1:ncol(df)){
+  df[i] <- range01(df[i])
+}
+}
+
+df[is.na(df)] <- 0
+df[colSums(df) == 0] <- NULL
+
+#run through LASSO
+
+lasso <- EaaLASSO(df)
+colnames(lasso) <- c('coef.name','LASSOvalue', 'LASSOScaled')
+lasso[is.na(lasso)] <- 0
+
+#run through Mutual Information
+
+mi <- EaaMutualInfo(df)
+mi$coef.name <- rownames(mi)
+colnames(mi) <- c('MutualInformation','MIScaled','coef.name')
+
+#run through Random Forest
+
+rf <- EaaRandomForest(df, numberTrees = 500)
+colnames(rf) <- c('coef.name','RFVariableImportance','RFNodePurity')
+
+rf$RFVariableImportanceScaled <- range01(as.numeric(as.character(rf$RFVariableImportance)))
+rf$RFNodePurityScaled <- range01(as.numeric(as.character(rf$RFNodePurity)))
+
+#run through Causality tests
+
+causality <- EaaTY_GNC_test(df)
+colnames(causality) <- c('PredictorCausesTarget','TargetCausesPredictor')
+
+causality$PredictorCausesTargetScaled <- 1-range01(causality$PredictorCausesTarget)
+causality$TargetCausesPredictorScaled <- 1-range01(causality$TargetCausesPredictor)
+causality$coef.name <- rownames(causality)
+
+#run through randomized LASSO
+
+
+
+#clean and aggregate together in one data frame
+
+aggTable <- join_all(list(lasso, mi, rf, causality), by='coef.name', type='left')
+
+return(aggTable)
+
+}
+
+```
+
+
+###Run a test case and create BlendedScore variable, which aggregates scores from various methods. Score metric is preliminary.
+
+
+```{r, eval = FALSE}
+aggTable <- EaaAggAll(df)
+
+aggTable$description <- vlookup(ref = aggTable$coef.name,table = reftable,column = 11)
+aggTable$BlendedScore <- aggTable$LASSOScaled + aggTable$MIScaled + aggTable$RFNodePurityScaled + aggTable$RFVariableImportanceScaled + aggTable$PredictorCausesTargetScaled - 2*aggTable$TargetCausesPredictorScaled
+
+aggTable <- aggTable[,c(1,14,15,2:13)]
+
+```
+
+###View sample of results
+```{r}
+aggTable$description <- substr(aggTable$description, 1, 50)
+aggTable <- aggTable[ order(-aggTable[,3]), ]
+head(aggTable[,2:3],15)
+```
+
+###Conclusions
+
+As we can see, the blended score feature is key to determining variable rank. Thus, the construction of that feature occurs outside the function itself to encourage the greatest modularity. Going forward, the blended score will need to be modified from its current naive form to account for the idiosyncracies of each feature ranking metric, and changing the formula will drastically change results.

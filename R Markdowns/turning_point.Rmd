@@ -1,0 +1,117 @@
+---
+title: "turning point"
+author: "liang kuang"
+date: "April 12, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Turning points for oil price
+In this R Markdown, it explores the Brend Spot Oil Price by trying to find the turning points from the time series. The first algorithm that experimented here is the most straigh-foward one, which defines a turning point as an event that has k consecutive change within the same direction and has momentum of at least above a threshold (In this case 5%).
+
+
+```{r loadlibs}
+#Load the libraries
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+library('ggplot2')
+library('zoo')
+library('dplyr')
+library('readr')
+library('dygraphs')
+library('xts')
+```
+
+
+```{r loaddata}
+# load the data
+WTI_spot_price_IDDS <- read.csv("//was-2pbs01/Users/mfp53502/Projects/EEA/R/WTI_spot_price_IDDS.csv",header=TRUE,as.is=TRUE)
+print(WTI_spot_price_IDDS$date[1])
+WTI_spot_price_IDDS$date <- as.Date(WTI_spot_price_IDDS$date,"%m/%d/%Y")
+str(WTI_spot_price_IDDS)
+```
+
+```{r find missing values}
+#remove any NAs
+WTI <- WTI_spot_price_IDDS[rowSums(is.na(WTI_spot_price_IDDS))==0,]
+```
+
+```{r plot}
+# plot the WTI spot price
+p1 <- ggplot() + geom_line(aes(y = datavalue, x = date,group = 1 ),size=0.5,
+                               data = WTI)
+p1 <- p1 + ggtitle('Brent Spot Oil Price')
+p1
+```
+### Algorithm One
+Three consecutive changes above 5%. (Monthly data from IDDS.)
+```{r}
+dIn <- WTI[,names(WTI)%in%c('date','datavalue')]
+k = 3;
+mag = 0.05;
+numRec <- length(dIn[,2])
+totalTP <- 0  # total number of turning points
+TP_list <- list()
+vout <- dIn[,2]
+checkArray <- as.vector(matrix(0,nrow=k,ncol=1))
+for(t in 1:(numRec-k)){
+ #checkArray = as.vector(dIn[(t+1):(t+k),2] - dIn[t,2])
+  checkArray = as.vector(diff(dIn[(t):(t+k),2])) # k consective same-direction change
+  #print(checkArray)
+ if(abs(sum(sign(checkArray)))==k & abs(checkArray[k]/dIn[t,2])>=mag) {
+   # if duration >= k and absolute change >= mag
+   TP_list <- append(TP_list,t)
+ }else{
+   vout <- NA
+ }
+}
+TP_list = as.integer(as.vector(TP_list))
+dOut <- data.frame(date=dIn[TP_list,1], value = dIn[TP_list,2])
+dOutfull <- data.frame(data=dIn[,1], value = vout)
+str(dOut)
+
+```
+
+### Experiment
+Check the results by graphics and interactive plots using dygraphs. 
+```{r plotresults}
+dOut$date <- as.Date(dOut$date)
+p1 <- p1 + geom_point(aes(x = date, y = value,group=1),size=1.5,color='red',
+                           data = dOut)
+p1
+```
+```{r datamanipulator}
+#create an elemvated dummy time series for visualization only
+dOut = mutate(dOut,value+5)
+colnames(dOut) <- c('date','turning point','elevated') 
+
+djoin <- merge(dIn,dOut, by=c('date'),all=TRUE)
+str(djoin)
+```
+
+### Interactive exploration of the turning points
+The javascript interactive graphic will enable us to zoom in and out the time series, also we can view the results by specifying the rolling window (rolling average smooth) in the lower-lest textbox. The bottom rangeselector also gives us a lot flexibility to view and validate the results. 
+
+```{r interactivegraph, fig.width=9,fig.height=4}
+
+djoin_xts <- xts(djoin[,2:3],order.by = djoin[,1])
+dygraph(djoin_xts,main = 'Brent Oil Price Turning Points(experiment)') %>% dyRangeSelector() %>% dySeries('datavalue',label='Brent Oil Price',drawPoints = FALSE,color='black') %>% 
+  dySeries('turning point', drawPoints = TRUE, color = 'red', pointSize = 2) %>%
+  dyLegend(width=400,show='always', hideOnMouseOut = TRUE) %>% dyRoller(rollPeriod=1) %>% 
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.8,
+              hideOnMouseOut = FALSE)%>%
+  dyEvent("2008-07-01",'Financial Crisis',labelLoc = 'bottom') %>%
+  dyEvent("2008-12-01",'Bottom', labelLoc = 'bottom')
+#drawxts <- xts(WTI[,3],order.by = WTI[,2])
+#dxts <- xts(dIn[,-1],order.by = dIn[,1]) 
+#dygraph(drawxts) #%>% 
+#dygraph(dxts,main='Brent Oil Price with Turning point (red)',xlab='Date') %>% dyRangeSelector()
+
+```
+
+### Conclusion
+Based on the algorithm implemented here, it can capture the turning points pretty accurately. 
+
