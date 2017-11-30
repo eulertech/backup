@@ -1,0 +1,55 @@
+{
+	"destinationSchema": "eaa_dev",
+	"sqlScript": "CreateJODITablesTemplate.sql",
+	"tableName": "jodi",
+	"bucketName": "ihs-bda-data",
+	"delimiter": ",",
+	"fileFormat": "GZIP",
+	"dmlFolder": "DML", 
+	"cleanlocal" : "N",	
+	"views": {
+		"createScriptName": "CreateDataViews.sql"
+	},
+	"srcCategories": [
+		{
+		    "srcCategory": "primary",
+		    "url": "https://www.jodidata.org/_resources/files/downloads/oil-data/world_primary_csv.zip",
+		    "unzipFilename": "world_Primary_CSV.csv",
+		    "dateFormat": "MONYYYY",
+		    "redshiftTableSuffixOrigin": "_primary",
+		    "redshiftTableSuffix": "_primary"
+		},
+		{
+		    "srcCategory": "secondary",
+		    "url": "https://www.jodidata.org/_resources/files/downloads/oil-data/world_secondary_csv.zip",
+		    "unzipFilename": "world_Secondary_CSV.csv",
+		    "dateFormat": "MONYYYY",
+		    "redshiftTableSuffixOrigin": "_secondary",
+		    "redshiftTableSuffix": "_secondary"
+		}
+	],
+	"referenceData": {
+  		"tables": [
+  			{
+  				"suffixName": "_units",
+  				"createScriptName": "CreateReferenceTable_Units.sql",
+  				"ddlScriptName": "LoadTable_Units.sql"
+  			},
+  			{
+  				"suffixName": "_product",
+  				"createScriptName": "CreateReferenceTable_Product.sql",
+  				"ddlScriptName": "LoadTable_Product.sql"
+  			},
+  			{
+  				"suffixName": "_flow",
+  				"createScriptName": "CreateReferenceTable_Flow.sql",
+  				"ddlScriptName": "LoadTable_Flow.sql"
+  			},
+  			{
+  				"suffixName": "_qualifier",
+  				"createScriptName": "CreateReferenceTable_Qualifier.sql",
+  				"ddlScriptName": "LoadTable_Qualifier.sql"
+  			}
+  		]
+  	}
+}

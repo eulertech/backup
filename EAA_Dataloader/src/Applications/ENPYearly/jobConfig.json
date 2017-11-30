@@ -1,0 +1,13 @@
+{
+	"outputfolder": "ENP_Yearly",
+	"accessdbname": "WOW_20164Q_Revised.accdb",
+	"accessTable" : "2016Q4",
+	"destinationSchema": "eaa_dev",
+	"sqlScript" : "CreateENPYearlyTablesTemplate.sql",
+	"tableName" : "enp_yearly",
+	"fileFormat" : "GZIP",
+	"delimiter" : ",",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+	"dblocation": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\OilProduction",
+	"cleanlocal" : "Y"	
+}

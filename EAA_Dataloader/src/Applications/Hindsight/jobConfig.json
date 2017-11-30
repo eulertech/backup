@@ -1,0 +1,28 @@
+{  
+  	"bcpParameters": {
+  	"destinationSchema": "hindsight_temp",
+	"bcpUtilityDirOnLinux": "/opt/mssql-tools/bin/",
+	"sqlServerloginInfo": "-S 10.45.88.171 -U maritime -P trial,123",
+	"fileFormat": "GZIP",
+	"dateFormat": "YYYY-MM-DD",
+	"delimiter": "|",
+	"subJobs": [
+		{
+		"inputQuery": "SQL/GetSeriesAttributes.sql",		
+		"rowTerminator": "{~*]",
+		"fieldTerminator" : "[~*}",
+		"charsToBeReplaced": [{"\n":""}, {"[~*}": "|", "{~*]": "\n"},{"'":""}],
+		"destination": "etl_series_attributes"		
+		},
+		{
+		"inputQuery": "SQL/GetSeriesData.sql",		
+		"fieldTerminator": "|",		
+		"destination": "etl_series_data"
+		}
+	],
+	"postETLQueries":["SQL/PostETLQuery.sql"],
+	"preETLQueries":["SQL/PreETLQuery.sql"],
+	"FinalLoadQueries":["SQL/FinalLoadQuery.sql"]	
+	},
+	"QCconfig":"QCconfig.json"
+}

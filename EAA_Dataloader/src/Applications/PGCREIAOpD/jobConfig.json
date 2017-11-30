@@ -1,0 +1,56 @@
+{
+  "destinationSchema": "pgcr_dev",
+  "sqlScript": "CreateEIAOpDTablesTemplate.sql",
+  "postETLQueries":"postETLQueries.sql",
+  "tableName": "EiaOpD_",
+  "bucketName": "ihs-bda-data",
+  "delimiter": ",",
+  "fileFormat": "GZIP",
+  "srcfileFormat": ".zip",
+  "dateFormat": "YYYY-MM-DD",
+  "s3SrcDirectory": "projects/Pgcr_WindDashboard/Raw/US_ELECTRIC_SYSTEM_OPERATING_DATA",
+  "s3ToDirectory": "/projects/Pgcr_WindDashboard/Cleaned/US_ELECTRIC_SYSTEM_OPERATING_DATA/",
+
+  "srcFileParameters": [
+    {
+      "s3Filename": "EIA930_BALANCE_2015_Jul_Dec",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Balance"
+    },
+    {
+      "s3Filename": "EIA930_BALANCE_2016_Jan_Jun",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Balance"
+    },
+    {
+      "s3Filename": "EIA930_BALANCE_2016_Jul_Dec",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Balance"
+    },
+    {
+      "s3Filename": "EIA930_BALANCE_2017_Jan_Jun",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Balance"
+    },
+    {
+      "s3Filename": "EIA930_INTERCHANGE_2015_Jul_Dec",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Interchange"
+    },
+    {
+      "s3Filename": "EIA930_INTERCHANGE_2016_Jan_Jun",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Interchange"
+    },
+    {
+      "s3Filename": "EIA930_INTERCHANGE_2016_Jul_Dec",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Interchange"
+    },
+    {
+      "s3Filename": "EIA930_INTERCHANGE_2017_Jan_Jun",
+      "Skip": [1],
+	  "redshiftTableSuffix": "Interchange"
+    }
+  ]
+}

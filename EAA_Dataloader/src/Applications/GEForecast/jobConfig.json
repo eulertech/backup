@@ -1,0 +1,249 @@
+{
+	"destinationSchema": "eaa_stage",
+	"bucketName" : "ihs-bda-data",
+	"s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/GEForecast",
+    "fileFormat" : "GZIP",
+    "delimiter": ",",
+    "dateFormat" : "auto",
+    "cleanlocal" : "N",
+    "batchsize": 5000,
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" },
+        { "name": "data", "folder": "csv/data", "new": "Y" },
+        { "name": "attribute", "folder": "csv/attribute", "new": "Y" }            
+    ],
+    "categories": [
+    {
+    	"name": "giif",
+	    "tables": [
+	    {
+	    		"schemaName": "eaa_stage",
+	            "table": "GEForecast_giif_attributes_working",
+	            "destName": "GEForecast_giif_attributes",
+	            "s3subfolder": "attribute",
+	            "new": "Y",
+	            "type": "attributes",
+	            "fields": [
+	                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+	                { "name": "name", "type": "VARCHAR", "size": "100" },
+	                { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+	                { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+	                { "name": "geo", "type": "VARCHAR", "size": "20" },
+	                { "name": "startDate", "type": "Date"},
+	                { "name": "endDate", "type": "Date"},
+	                { "name": "updatedDate", "type": "Date"},
+	                { "name": "publishedDate", "type": "Date"},
+	                { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+	                { "name": "dataEdge", "type": "VARCHAR", "size": "100" }
+	            ],
+	    		"sortkey":"object_id"                    
+	        },
+	        {
+	    		"schemaName": "eaa_stage",
+	            "table": "GEForecast_giif_data_working",
+	            "destName": "GEForecast_giif_data",
+	            "s3subfolder": "data",
+	            "new": "Y",
+	            "type": "series",
+	            "fields": [
+	                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+	                { "name": "date", "type": "DATE" },
+	                { "name": "value", "type": "FLOAT8" }
+	            ],
+	    		"sortkey":"object_id, date"                    
+	        },
+			{
+	    		"schemaName": "eaa_stage",
+	            "table": "GEForecast_giif_attributes",
+	            "new": "N",
+	            "type": "attributes",
+	            "fields": [
+	                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+	                { "name": "name", "type": "VARCHAR", "size": "100" },
+	                { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+	                { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+	                { "name": "geo", "type": "VARCHAR", "size": "20" },
+	                { "name": "startDate", "type": "Date"},
+	                { "name": "endDate", "type": "Date"},
+	                { "name": "updatedDate", "type": "Date"},
+	                { "name": "publishedDate", "type": "Date"},
+	                { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+	                { "name": "dataEdge", "type": "VARCHAR", "size": "100" }
+	            ],
+	    		"sortkey":"object_id",                    
+	    		"distkey":"object_id"                    
+	        },
+	        {
+	    		"schemaName": "eaa_stage",
+	            "table": "GEForecast_giif_data",
+	            "new": "N",
+	            "type": "series",
+	            "fields": [
+	                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+	                { "name": "date", "type": "DATE" },
+	                { "name": "value", "type": "FLOAT8" }
+	            ],
+	    		"sortkey":"object_id, date",                    
+	    		"distkey":"object_id"                    
+	        }]                
+	    },
+	    {
+	    	"name": "srs",
+		    "tables": [
+		    {
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_srs_attributes_working",
+		            "destName": "GEForecast_srs_attributes",
+		            "s3subfolder": "attribute",
+		            "new": "Y",
+		            "type": "attributes",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "name", "type": "VARCHAR", "size": "100" },
+		                { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+		                { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+		                { "name": "geo", "type": "VARCHAR", "size": "20" },
+		                { "name": "startDate", "type": "Date"},
+		                { "name": "endDate", "type": "Date"},
+		                { "name": "updatedDate", "type": "Date"},
+		                { "name": "publishedDate", "type": "Date"},
+		                { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+		                { "name": "dataEdge", "type": "VARCHAR", "size": "100" }
+		            ],
+		    		"sortkey":"object_id"                    
+		        },
+		        {
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_srs_data_working",
+		            "destName": "GEForecast_srs_data",
+		            "s3subfolder": "data",
+		            "new": "Y",
+		            "type": "series",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "date", "type": "DATE" },
+		                { "name": "value", "type": "FLOAT8" }
+		            ],
+		    		"sortkey":"object_id, date"                    
+		        },
+				{
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_srs_attributes",
+		            "new": "N",
+		            "type": "attributes",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "name", "type": "VARCHAR", "size": "100" },
+		                { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+		                { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+		                { "name": "geo", "type": "VARCHAR", "size": "20" },
+		                { "name": "startDate", "type": "Date"},
+		                { "name": "endDate", "type": "Date"},
+		                { "name": "updatedDate", "type": "Date"},
+		                { "name": "publishedDate", "type": "Date"},
+		                { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+		                { "name": "dataEdge", "type": "VARCHAR", "size": "100" }
+		            ],
+		    		"sortkey":"object_id",                    
+		    		"distkey":"object_id"                    
+		        },
+		        {
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_srs_data",
+		            "new": "N",
+		            "type": "series",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "date", "type": "DATE" },
+		                { "name": "value", "type": "FLOAT8" }
+		            ],
+		    		"sortkey":"object_id, date",                    
+		    		"distkey":"object_id"                    
+		        }]                
+		    },
+	    {
+	    	"name": "wes",
+		    "tables": [
+		    {
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_wes_attributes_working",
+		            "destName": "GEForecast_wes_attributes",
+		            "s3subfolder": "attribute",
+		            "new": "Y",
+		            "type": "attributes",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "name", "type": "VARCHAR", "size": "100" },
+		                { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+		                { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+		                { "name": "geo", "type": "VARCHAR", "size": "20" },
+		                { "name": "startDate", "type": "Date"},
+		                { "name": "endDate", "type": "Date"},
+		                { "name": "updatedDate", "type": "Date"},
+		                { "name": "publishedDate", "type": "Date"},
+		                { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+		                { "name": "dataEdge", "type": "VARCHAR", "size": "100" }
+		            ],
+		    		"sortkey":"object_id"                    
+		        },
+		        {
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_wes_data_working",
+		            "destName": "GEForecast_wes_data",
+		            "s3subfolder": "data",
+		            "new": "Y",
+		            "type": "series",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "date", "type": "DATE" },
+		                { "name": "value", "type": "FLOAT8" }
+		            ],
+		    		"sortkey":"object_id, date"                    
+		        },
+				{
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_wes_attributes",
+		            "new": "N",
+		            "type": "attributes",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "name", "type": "VARCHAR", "size": "100" },
+		                { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+		                { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+		                { "name": "geo", "type": "VARCHAR", "size": "20" },
+		                { "name": "startDate", "type": "Date"},
+		                { "name": "endDate", "type": "Date"},
+		                { "name": "updatedDate", "type": "Date"},
+		                { "name": "publishedDate", "type": "Date"},
+		                { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+		                { "name": "dataEdge", "type": "VARCHAR", "size": "100" }
+		            ],
+		    		"sortkey":"object_id",                    
+		    		"distkey":"object_id"                    
+		        },
+		        {
+		    		"schemaName": "eaa_stage",
+		            "table": "GEForecast_wes_data",
+		            "new": "N",
+		            "type": "series",
+		            "fields": [
+		                { "name": "object_id", "type": "VARCHAR", "size": "30" },
+		                { "name": "date", "type": "DATE" },
+		                { "name": "value", "type": "FLOAT8" }
+		            ],
+		    		"sortkey":"object_id, date",                    
+		    		"distkey":"object_id"                    
+		        }]                
+		    }
+	 ],
+    "mongoDBConnectionInfo": {
+    	"server": "vwc-2piecdb01.ihsglobal.local",
+    	"port": 27017,
+    	"database": "archive",
+    	"user": "hindsight",
+    	"pwd": "Password123$"
+    },
+	"sqlUpdateScript" : "UpdateGEForecastTemplate.sql"
+}

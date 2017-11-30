@@ -1,0 +1,56 @@
+{
+  "name": "OPISAthenaSpark",
+	"srcSharedFolder": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\IHSAutomotive\\",  	
+  	"cleanlocal" : "N",  
+	"folders": [
+    	{ "name": "sql", "folder": "sql", "new": "Y" },
+    	{ "name": "csv", "folder": "csv", "new": "Y" },
+    	{ "name": "parquet", "folder": "parquet", "new": "Y" }
+	],  	
+   "tables": [{
+    		"schemaName": "energy_prod",
+            "table": "opis_retail_price",
+            "srcBucketName": "ihs-bda-data",
+			"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/OPIS/",            
+            "srcFile": "IHS_Weekly_Retail_Price_File_20170202.csv",
+    		"loadToRedshift": "Y", 
+    		"delimiter": ",",
+            "new": "Y",
+            "fields": [
+            { "name": "fuel_location_id", "type": "INTEGER" },
+            { "name": "address1", "type": "VARCHAR", "size": "100" },
+            { "name": "address2", "type": "VARCHAR", "size": "100" },
+            { "name": "zip", "type": "VARCHAR", "size": "50" },
+            { "name": "brand_name", "type": "VARCHAR", "size": "50" },
+            { "name": "retail_product_name", "type": "VARCHAR", "size": "50" },
+            { "name": "days_with_prices", "type": "INTEGER" },
+            { "name": "price", "type": "REAL" }
+            ],
+            "sortkey":"fuel_location_id"
+        },
+        {
+    		"schemaName": "energy_prod",
+            "table": "opis_retail_volume",
+            "srcBucketName": "ihs-bda-data",
+			"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/OPIS/",            
+            "srcFile": "IHS_Weekly_Retail_Volume_File_20170202.csv",
+    		"loadToRedshift": "Y", 
+    		"delimiter": ",",
+            "new": "Y",
+       		"adjustFormat":[
+                { "name": "date", "inputFormat": "mm/dd/yyyy" }
+    		],
+            "fields": [
+            { "name": "date", "type": "DATE" },
+            { "name": "volume_location_id", "type": "INTEGER" },
+            { "name": "address1", "type": "VARCHAR", "size": "100" },
+            { "name": "address2", "type": "VARCHAR", "size": "100" },
+            { "name": "zip", "type": "VARCHAR", "size": "50" },
+            { "name": "retail_product_name", "type": "VARCHAR", "size": "50" },
+            { "name": "volume_type_name", "type": "VARCHAR", "size": "40" },
+            { "name": "volume_amount", "type": "REAL" }
+            ],
+            "sortkey":"date"
+        }
+    ]
+}

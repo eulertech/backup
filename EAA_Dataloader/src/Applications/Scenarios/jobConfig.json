@@ -1,0 +1,77 @@
+{
+	"name": "Scenarios",
+	"destinationSchema": "eaa_dev",
+	"bucketName" : "ihs-bda-data",
+	"s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/Scenarios",
+    "fileFormat" : "GZIP",
+    "delimiter": "|",
+    "dateFormat" : "auto",
+    "cleanlocal" : "N",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" }        
+    ],
+    "tables": [{
+    		"schemaName": "eaa_dev",
+            "table": "scenario_working",
+            "new": "Y",
+            "type": "working",
+            "s3subfolder": "Data",
+            "fields": [
+                { 
+                	"name": "scenario_key", "type": "VARCHAR", "size": "200",
+                	"fields": [
+		                { "name": "scenario_name"},
+		                { "name": "mnemonic"}
+                	] 
+                },
+                { "name": "scenario_name", "type": "VARCHAR", "size": "100" },
+                { "name": "region", "type": "VARCHAR", "size": "50" },
+                { "name": "mnemonic", "type": "VARCHAR", "size": "30" },
+                { "name": "longname", "type": "VARCHAR", "size": "200" },
+                { "name": "date", "type": "DATE"},
+                { "name": "value", "type": "REAL" },                
+                { "name": "unit", "type": "VARCHAR", "size": "10" },
+                { "name": "modifieddate", "type": "DATE" }
+            ],
+       		"sortkey":"scenario_key, date",
+       		"distkey":"scenario_key"                
+        },
+		{
+    		"schemaName": "eaa_dev",
+            "table": "scenario_attributes",
+            "new": "Y",
+            "type": "attributes",
+            "fields": [
+                { "name": "scenario_key", "type": "VARCHAR", "size": "200" },
+                { "name": "scenario_name", "type": "VARCHAR", "size": "100" },
+                { "name": "region", "type": "VARCHAR", "size": "50" },
+                { "name": "mnemonic", "type": "VARCHAR", "size": "30" },
+                { "name": "longname", "type": "VARCHAR", "size": "200" },
+                { "name": "unit", "type": "VARCHAR", "size": "10" }
+            ],
+    		"sortkey":"scenario_key",                    
+    		"distkey":"scenario_key"                 
+        },
+        {
+    		"schemaName": "eaa_dev",
+            "table": "scenario_data",
+            "new": "Y",
+            "type": "series",
+            "fields": [
+                { "name": "scenario_key", "type": "VARCHAR", "size": "200" },
+                { "name": "date", "type": "DATE" },
+                { "name": "value", "type": "REAL" }
+            ],
+    		"sortkey":"scenario_key, date",                    
+    		"distkey":"scenario_key"                             
+        }                
+    ],
+	"mssqlLoginInfo_uat": "-S UK2-2SEINGSDB02 -dGEM_GS -T",
+	"mssqlLoginInfo_prod": "-S UK2-2PEINGSDB02 -dGEM_GlobalScenario -T",
+	"mssqlLoginInfo": "-S UK2-2PEINGSDB02 -dGEM_GlobalScenario -T",
+	"bcpUtilityDirOnLinux": "/opt/mssql-tools/bin",
+	"sqlPullDataScriptTemplate" : "GetScenarioDataTemplate.sql",
+	"sqlUpdateScript" : "UpdateScenarioTemplate.sql"
+}

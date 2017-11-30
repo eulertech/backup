@@ -1,0 +1,9 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+.RDataTmp
+
+^demo/obsolete$
+^Config/
+^Tools/
+^logs/
+derby.log

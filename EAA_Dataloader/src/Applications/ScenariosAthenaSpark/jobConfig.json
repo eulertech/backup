@@ -1,0 +1,90 @@
+{
+	"name": "ScenariosAthenaSpark",
+    "fieldTerminator": "|",
+    "cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "raw", "folder": "raw", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" } 
+    ],
+    "Databases":[
+    {
+        "execute": "Y",
+		"common": {		
+	        "name": "GEM_GlobalScenario",
+			"server": "UK2-2PEINGSDB02",
+			"driver": "{ODBC Driver 11 for SQL Server}"
+		},
+        "catalogs":[
+        {
+	        "execute": "Y",
+	        "name": "Scenario",
+		    "tables": [{
+	    		"schemaName": "energy_prod",
+	            "sourcetable": "scenario",
+				"pullTemplate": "GetScenarioDataTemplate.sql",
+				"paramTable": "scenario_data",	            
+            	"new": "N",
+	            "type": "working",
+	            "fields": [
+	                { 
+	                	"name": "scenario_key", "type": "VARCHAR", "size": "200",
+	                	"fields": [
+			                { "name": "scenario_name"},
+			                { "name": "mnemonic"}
+	                	] 
+	                },
+	                { "name": "scenario_name", "type": "VARCHAR", "size": "100" },
+	                { "name": "region", "type": "VARCHAR", "size": "50" },
+	                { "name": "mnemonic", "type": "VARCHAR", "size": "30" },
+	                { "name": "longname", "type": "VARCHAR", "size": "200" },
+	                { "name": "date", "type": "DATE"},
+	                { "name": "value", "type": "REAL" },                
+	                { "name": "unit", "type": "VARCHAR", "size": "10" },
+	                { "name": "modifieddate", "type": "DATE" }
+	            ]
+	        },
+			{
+	    		"schemaName": "energy_prod",
+	            "table": "scenario_attributes",
+	            "new": "N",
+	    		"loadToRedshift": "Y",
+	            "type": "attributes",
+	            "fields": [
+	                { "name": "scenario_key", "type": "VARCHAR", "size": "200" },
+	                { "name": "scenario_name", "type": "VARCHAR", "size": "100" },
+	                { "name": "region", "type": "VARCHAR", "size": "50" },
+	                { "name": "mnemonic", "type": "VARCHAR", "size": "30" },
+	                { "name": "longname", "type": "VARCHAR", "size": "200" },
+	                { "name": "unit", "type": "VARCHAR", "size": "10" },
+					{ "name": "etl_rundate", "type": "INTEGER", "isPartitioned": "Y", "athenaOnly": "Y"}	                 
+	            ],
+	    		"sortkey":"scenario_key",                    
+	    		"distkey":"scenario_key"                 
+	        },
+	        {
+	    		"schemaName": "energy_prod",
+	            "table": "scenario_data",
+	            "new": "N",
+	    		"loadToRedshift": "Y",
+	      		"adjustFormat":[
+	                { "name": "date", "inputFormat": "mm/dd/yyyy" }
+	    		],
+	            "type": "series",
+	            "fields": [
+	                { "name": "scenario_key", "type": "VARCHAR", "size": "200" },
+	                { "name": "date", "type": "DATE" },
+	                { "name": "value", "type": "REAL" },
+					{ "name": "etl_rundate", "type": "INTEGER", "isPartitioned": "Y", "athenaOnly": "Y"}	                 
+	            ],
+	    		"sortkey":"scenario_key, date",                    
+	    		"distkey":"scenario_key"                             
+	        }                
+           ]
+        }
+        ]
+    }],
+	"bcpUtilityDirOnLinux": "/opt/mssql-tools/bin"
+	
+}

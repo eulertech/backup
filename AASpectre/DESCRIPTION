@@ -1,0 +1,109 @@
+Package: AASpectre
+Type: Package
+Title: Forecasting Toolbox Engine
+Version: 0.5.6.9019
+Author: Francisco Marco-Serrano, Rajesh Vaddi, Marc Veillet, Christopher Lewis, Ayon Choudhury, and Lou Zhang
+Maintainer: Francisco Marco-Serrano <francisco.marco-serrano@ihsmarkit.com>
+Description: Set of functions intended to facilitate the efficient build of a
+    prediction pipeline.
+SystemRequirements: Java (>= 1.6)
+Encoding: UTF-8
+License: LICENSE
+Copyright: IHS Markit Ltd
+LazyData: TRUE
+Depends:
+    R (>= 3.2.0),
+    AACloudTools,
+    stringr,
+    data.table,
+    foreach,
+    iterators,
+    lubridate,
+    uuid,
+    dplyr
+Imports:
+    methods,
+    plyr,
+    dplyr,
+    caret,
+    zoo,
+    DMwR,
+    imputeTS,
+    changepoint,
+    forecast,
+    timeSeries,
+    tseries,
+    pracma,
+    glmnet,
+    gvlma,
+    ranger,
+    CORElearn,
+    dtwclust,
+    DAAG,
+    car,
+    moments,
+    relaimpo,
+    lmtest,
+    sandwich,
+    qicharts,
+    bsts,
+    MonoInc,
+    sparklyr
+RoxygenNote: 6.0.1.9000
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat,
+    XLConnect,
+    shiny,
+    MASS,
+    fpc,
+    proxy
+VignetteBuilder: knitr
+Collate: 
+    'AA_Dev.R'
+    'AA_Transformations.R'
+    'CustomVariables.R'
+    'Help_PipelineOne.R'
+    'Help_PipelineTwo.R'
+    'ParamDefinitions.R'
+    'Spectre-package.R'
+    'SpectreAccuracy.R'
+    'SpectreAnalyseVariable.R'
+    'SpectreAutoReg.R'
+    'SpectreVarList.R'
+    'SpectreBlackList.R'
+    'SpectreBuildEnsemble.R'
+    'SpectreControlLimits.R'
+    'SpectreDashboard.R'
+    'SpectreDynamicEnsemble.R'
+    'SpectreGetClusters.R'
+    'SpectreGetData.R'
+    'SpectreGetData_Spark.R'
+    'SpectreGetDynamicEnsemble.R'
+    'SpectreGetFeatures.R'
+    'SpectreGetFiltered.R'
+    'SpectreGetFunctions.R'
+    'SpectreGetImputed.R'
+    'SpectreGetRevFunctions.R'
+    'SpectreIdentifyChange.R'
+    'SpectreInteractions.R'
+    'SpectreLinearity.R'
+    'SpectreModelsSelectionWeight.R'
+    'SpectreMulticollinearityAdjustment.R'
+    'SpectreOutlier.R'
+    'SpectreParamList.R'
+    'SpectreParamListCheck.R'
+    'SpectrePerformance.R'
+    'SpectrePipelineOne.R'
+    'SpectrePipelineTwo.R'
+    'SpectrePipelineX.R'
+    'SpectrePipelineY.R'
+    'SpectreSpark.R'
+    'SpectreStationarity.R'
+    'SpectreUpdateDatabase.R'
+    'SpectreWhiteList.R'
+    'SpectreXLvisualization.R'
+    'VarIDs.R'
+    'VarInfo.R'
+    'VarListManagement.R'

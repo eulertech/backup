@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+*.RData
+.RDataTmp
+.Ruserdata
+.Rprofile
+inst/doc
+AASpectre.Rproj
+man/*.Rd
+vignettes/*.html
+vignettes/*.pdf
+*.log
+logs/*.log*
+Config/redshift_username_password.json

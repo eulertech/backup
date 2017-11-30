@@ -1,0 +1,1 @@
+SELECT series_id,frequency,prior_version,prior_rowcount,old_startdate,old_enddate,old_date_diff,current_version,current_rowcount,latest_startdate,latest_enddate,latest_date_diff,change,ratio FROM hindsight_etl.VW_real_rowcount_mismatch_across_version WHERE ratio >= 0.5;

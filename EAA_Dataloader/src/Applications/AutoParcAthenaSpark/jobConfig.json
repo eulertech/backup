@@ -1,0 +1,42 @@
+{
+	"name" : "AutoParc",
+	"s3Filename" : "s3://ihs-bda-data/projects/Enrg_ExecutiveAffairsAuthority/Automotive/Parc/ihs_technology.txt.gz",
+	"delimiter" : ";",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+  	"cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+		{ "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" },        
+        { "name": "parquet", "folder": "parquet", "new": "Y" }        
+    ],
+	"tables": [{
+		"schemaName": "automotive_prod",
+		"table": "auto_parc",
+		"new": "Y",
+		"fields": [
+	        { "name": "country", "type": "VARCHAR", "size": "40" },
+	        { "name": "registration_type", "type": "VARCHAR", "size": "40" },
+	        { "name": "make", "type": "VARCHAR", "size": "40" },
+	        { "name": "model", "type": "VARCHAR", "size": "40" },
+	        { "name": "body_type", "type": "VARCHAR", "size": "40" },
+	        { "name": "fuel_type", "type": "VARCHAR", "size": "20" },
+	        { "name": "engine_displacement_ccm", "type": "INTEGER" },
+	        { "name": "engine_displacement_litres", "type": "VARCHAR", "size": "10" },
+	        { "name": "engine_power", "type": "INTEGER" },
+	        { "name": "number_of_cylinders", "type": "INTEGER" },
+	        { "name": "gvw", "type": "INTEGER" },
+	        { "name": "transmission_type", "type": "VARCHAR", "size": "40" },
+	        { "name": "axle_configuration", "type": "VARCHAR", "size": "10" },
+	        { "name": "history_forecast_kode", "type": "VARCHAR", "size": "2" },
+	        { "name": "modms_txt", "type": "VARCHAR", "size": "40" },
+	        { "name": "model_kode_fc", "type": "VARCHAR", "size": "10" },
+	        { "name": "model_kode", "type": "VARCHAR", "size": "10" },
+	        { "name": "model_txt", "type": "VARCHAR", "size": "40" },
+	        { "name": "year", "type": "INTEGER" },
+	        { "name": "market", "type": "VARCHAR", "size": "10" },
+	        { "name": "total", "type": "INTEGER" },
+	        { "name": "model_age", "type": "INTEGER"}
+	    ]
+	}]
+}

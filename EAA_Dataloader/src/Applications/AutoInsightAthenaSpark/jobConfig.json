@@ -1,0 +1,30 @@
+{
+	"name" : "AutoInsight",
+  	"cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" }        
+    ],
+	"common": {		
+		"srcSharedFolder": "//engdc02/dfs/COMMON/LakePeople/Energy/Data/IHSAutomotive/",
+		"fileName": "Query_ScenarioJuly2017_000120172508035955.xlsx",
+		"worksheetName": "Query",
+		"columns_no_melt": ["Vehicle Sales: Country", "Vehicle Sales: Actual Line Date"],
+	    "skipRows": 0,
+	    "skipFooter": 3,
+	    "delimiter": ",",
+	    "dateFormat" : "auto"
+	},
+  	"tables": [{
+		"schemaName": "automotive_prod",
+        "table": "auto_insight_scenario",
+        "new": "Y",
+        "fields": [
+            { "name": "country", "type": "VARCHAR", "size": "50" },
+            { "name": "actual_line_date", "type": "DATE" },
+            { "name": "date", "type": "DATE" },
+            { "name": "value", "type": "INTEGER" }
+        ]
+  	}]
+}

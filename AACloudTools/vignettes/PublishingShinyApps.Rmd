@@ -1,0 +1,53 @@
+---
+title: "Publishing Shiny Applications"
+author: "Marc Veillet"
+date: "5/1/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Quick start
+
+A typical Shiny application development process involves the following steps
+
+1. [optionally] Perform initial development of Shiny app on local workstation; commit project to Git.
+2. Open a session on the RStudio/Shiny server (e.g. http://10.45.89.34:8787 )
+3. Git pull the project with Shiny Application.
+4. [optoinally] Further test and finalize development as needed, working on RStudio Server (don't forget to Git commit as needed)
+5. Call AACloudTools::PublishShinyApp()
+6. Verify:  Visit  http://the_server_ip:3838/app/folder_and_name_as_per_PublishShinyApp
+
+
+## How to use PublishShinyApp() function
+
+First off, you must call this function _from the very Shiny server_ where the application will be hosted.  Any attempt to call
+it from anywhere but a valid Shiny Server (which also is typically an RStudio server) will fail with an error message which
+reiterates the overall flow outlined above.  For example, http://10.45.89.34 is such a valid server; on port 8787 it serves
+the RStudio IDE and on port 3838, it serves the Shiny apps.
+
+The only required argument for the function PublishShinyApp() is the `srcFolder'.  It informs the function on where to find
+the shiny app.  A shiny app is normally self-contained, in a given folder (typically containing other folders).  The publishing
+process is little more but to copy the entirety of this source folder to a folder, found somewhere, below the "root" of all served shiny
+apps.
+
+For example if your Shiny application is found in the  "/home/Jeff/EAA_Analytics/Development/ShinyDev/timeseries_viz",  and assuming that the
+current folder is "/home/Jeff/EAA_Analytics",  the srcFolder argument should be set to "Development/ShinyDev/timeseries_viz"
+
+The optional 'appName' argument is used to "rename" the application;  this name defaults to the basename of the source folder, say,
+"timeseries_viz" in the example above.   Assuming you'd want the users to find this application more easily by naming it, 
+say, "TimeSeriesExplorer", simply used this value in he 'appName'.  Another use of this argument is to keep multiple versions, by
+tagging them with a name that includes some date or some version number (use wisely, as it can quickly lead to end users'
+confusion, but it can also be useful to keep one or two extra versions for various reasons).
+
+
+The other optional argument is 'extraPath'; it is used to organize your applications in a deeper structure.  By default,
+applications are placed in the 'app' folder, just right below the "root" of the Shiny published app folder.  Users can then
+reach the applicaiton with a url like  http://server_ip:3838/app/the_app_name.   With the extraPath, we have the ability to
+organize all the application in a meaningful structure.  For example a subfolder could be used to contain all the EDA-related
+applications, another one for all the interactive displays of models etc.
+
+
+

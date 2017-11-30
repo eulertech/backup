@@ -1,0 +1,10 @@
+{
+	"destinationSchema": "eaa_dev",
+	"sqlScript" : "CreateAutoParcTablesTemplate.sql",
+	"tableName" : "auto_parc",
+	"s3Filename" : "s3://ihs-bda-data/projects/Enrg_ExecutiveAffairsAuthority/Automotive/Parc/ihs_technology.txt.gz",
+	"delimiter" : ";",
+	"fileFormat" : "GZIP",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+  	"cleanlocal" : "N"  	
+}

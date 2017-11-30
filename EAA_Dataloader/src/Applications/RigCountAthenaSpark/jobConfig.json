@@ -1,0 +1,33 @@
+{
+	"name": "RigCountAthenaSpark",
+	"cleanlocal" : "Y",
+	"folders": [
+    	{ "name": "sql", "folder": "sql", "new": "Y" },
+    	{ "name": "csv", "folder": "csv", "new": "Y" },
+    	{ "name": "raw", "folder": "raw", "new": "Y" },
+    	{ "name": "parquet", "folder": "parquet", "new": "Y" }
+	],    
+    "tables": [{
+		"schemaName": "energy_prod",
+        "table": "RigCount",
+        "srcBucketName": "ihs-bda-data",
+		"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/RigCount/",
+		"srcFile": "Dashboard - U.S. Oil Pdn.161130 $46.xlsx",
+		"sheetName": "DataImport",
+		"delimiter" : ",",
+    	"loadToRedshift": "Y", 
+       	"adjustFormat":[
+        	{ "name": "valuationdate", "inputFormat": "mm/dd/yyyy" }
+    	],
+        "new": "Y",
+        "fields": [
+            { "name": "category", "type": "VARCHAR", "size": "200" },
+            { "name": "valuationdate", "type": "DATE" },
+            { "name": "name", "type": "VARCHAR", "size": "200" },
+            { "name": "wells", "type": "REAL" }
+        ],
+        "sortkey":"category"
+    }        
+    ]	
+	
+}

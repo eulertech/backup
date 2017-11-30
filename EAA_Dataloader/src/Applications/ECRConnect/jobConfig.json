@@ -1,0 +1,23 @@
+{
+	"destinationSchema": "eaa_stage",
+	"sqlScript" : "CreateECRTablesTemplate.sql",
+	"tableName" : "ecr_risks",
+	"bucketName" : "ihs-bda-data",
+	"s3ToDirectory": "/projects/Enrg_ExecutiveAffairsAuthority/ECRConnect",
+	"connectAPI": {
+		"baseurl": "https://connectapi.ihs.com",
+		"username": "abudhabieaaapi",
+		"password": "U8dt4681",
+		"riskService": "/risk/v2/country-risk/ratings"
+  	},
+  	"fileNameOut": "risksbycountry.csv",
+  	"fileNameOutHistory": "risksbycountryhistory.csv",
+    "fileFormat" : "GZIP",
+    "delimiter": ",",
+    "dateFormat" : "auto",
+    "postSQLScript": "PostETL.sql",
+    "xReference": {
+    	"tableNameSfx": "_xref_class",
+    	"s3DataDirectory": "/projects/Enrg_ExecutiveAffairsAuthority/ECRConnect/ecr_risks_classification.csv.gz"
+    }
+}

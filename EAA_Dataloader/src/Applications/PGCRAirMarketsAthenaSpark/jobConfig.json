@@ -1,0 +1,117 @@
+{
+ "bucketName": "ihs-bda-data",
+	"s3Filename" : "/projects/Pgcr_WindDashboard/Raw/AirMarketsData/12-31-2016/EPADownload.zip",
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+  	"cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" }
+    ],
+  "tables": [{
+		"schemaName": "pgcr_dev",
+		"table": "an_airmarketsFull_emission_test",
+		"new": "Y",
+		"fields": [
+	        { "name": "state", "type": "VARCHAR", "size": "100" },
+		    { "name": "facility_name", "type": "VARCHAR", "size": "100"},
+            { "name": "facility_id_orispl", "type": "BIGINT"},
+            { "name": "unit_id", "type": "VARCHAR", "size": "10" },
+            { "name": "associated_stacks", "type": "VARCHAR", "size": "100" },
+            { "name": "year", "type": "INTEGER"},
+            { "name": "date", "type": "VARCHAR", "size": "10" },
+            { "name": "hour", "type": "INTEGER"},
+            { "name": "programs", "type": "VARCHAR", "size": "200" },
+            { "name": "operating_time", "type": "FLOAT"},
+            { "name": "gross_load_mw", "type": "FLOAT"},
+            { "name": "steam_load_5000lb_hr", "type": "FLOAT"},
+            { "name": "so2_pounds", "type": "FLOAT"},
+            { "name": "avg_nox_rate_lb_mmbtu", "type": "FLOAT"},
+            { "name": "nox_pounds", "type": "FLOAT" },
+            { "name": "co2_short_tons", "type": "FLOAT"},
+            { "name": "heat_input_mmbtu", "type": "FLOAT"},
+            { "name": "epa_region", "type": "INTEGER" },
+            { "name": "nerc_region", "type": "VARCHAR", "size": "100" },
+            { "name": "county", "type": "VARCHAR", "size": "100" },
+            { "name": "source_category", "type": "VARCHAR", "size": "100" },
+            { "name": "owner", "type": "VARCHAR", "size": "2000" },
+            { "name": "operator", "type": "VARCHAR", "size": "2000" },
+            { "name": "representative_primary", "type": "VARCHAR", "size": "3000" },
+            { "name": "representative_secondary", "type": "VARCHAR", "size": "3000" },
+            { "name": "so2_phase", "type": "VARCHAR", "size": "200" },
+            { "name": "nox_phase", "type": "VARCHAR", "size": "200" },
+            { "name": "operating_status", "type": "VARCHAR", "size": "200" },
+            { "name": "unit_type", "type": "VARCHAR", "size": "200" },
+            { "name": "fuel_type_primary", "type": "VARCHAR", "size": "200" },
+            { "name": "fuel_type_secondary", "type": "VARCHAR", "size": "200" },
+            { "name": "so2_controls", "type": "VARCHAR", "size": "200" },
+            { "name": "nox_controls", "type": "VARCHAR", "size": "200" },
+            { "name": "pm_controls", "type": "VARCHAR", "size": "200" },
+            { "name": "hg_controls", "type": "VARCHAR", "size": "200" },
+            { "name": "facility_latitude", "type": "FLOAT" },
+            { "name": "facility_longitude", "type": "FLOAT" }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	    ]
+	}]
+}

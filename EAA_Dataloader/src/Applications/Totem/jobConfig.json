@@ -1,0 +1,136 @@
+{
+    "destinationSchema": "eaa_dev",
+    "bucketName": "ihs-bda-data",
+    "s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/Totem",
+    "sqlUpdateScript" : "TotemUpdateTemplate.sql",
+    "fileFormat": "GZIP",
+    "delimiter": ",",
+    "dateFormat": "auto",
+    "cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" }
+    ],
+    "General": {
+        "user": "EAA_Support@ihsmarkit.com",
+        "pwd": "Saqako30",
+        "baseurl": "https://totem.markit.com/api/unified",
+        "baseurl_UAT": "https://totem_UAT.markit.com/api/unified"
+    },
+    "archiveexts": [
+        { "name": "*.gz" },
+        { "name": "*.tar" }
+    ],
+    "DatesParams": {
+        "service": "Oil",
+        "service_type": "daily",
+        "product": "Energy"
+    },
+    "FileList": {
+        "service": "Oil",
+        "service_type": "daily",
+        "product": "Energy"
+    },
+    "Files": {
+        "service_type": "daily",
+        "product": "Energy",
+        "service": "Oil"
+    },
+    "level1items": [
+        { "name": "valuationDate" },
+        { "name": "clientID" }
+    ],
+    "level2items": [
+        { "name": "name" },
+        { "name": "group" },
+        { "name": "units" },
+        { "name": "pricingTime" }
+    ],
+    "level3items": [
+        { "name": "period" },
+        { "name": "startDate" },
+        { "name": "endDate" },
+        { "name": "type" },
+        { "name": "price" },
+        { "name": "consensusPrice" },
+        { "name": "compositePrice" },
+        { "name": "priceRange" },
+        { "name": "contributors" },
+        { "name": "priceStddev" },
+        { "name": "strike" },
+        { "name": "vol" },
+        { "name": "reconstitutedForward" },
+        { "name": "consensusVol" },
+        { "name": "compositeVol" },
+        { "name": "volRange" },
+        { "name": "expiryDate" },
+        { "name": "volStddev" }
+    ],
+    "tables": [{
+    		"schemaName": "eaa_dev",
+            "table": "tcc_totem_working",
+            "destName": "tcc_totem",
+            "new": "Y",
+            "fields": [
+                { "name": "valuationdate", "type": "DATE" },
+                { "name": "clientid", "type": "INTEGER" },
+                { "name": "name", "type": "VARCHAR", "size": "200" },
+                { "name": "totemgroup", "type": "VARCHAR", "size": "100" },
+                { "name": "units", "type": "VARCHAR", "size": "50" },
+                { "name": "pricingtime", "type": "VARCHAR", "size": "50" },
+                { "name": "period", "type": "VARCHAR", "size": "30" },
+                { "name": "startDate", "type": "VARCHAR", "size": "10" },
+                { "name": "endDate", "type": "VARCHAR", "size": "10" },
+                { "name": "totemtype", "type": "VARCHAR", "size": "10" },
+                { "name": "price", "type": "REAL" },
+                { "name": "consensusPrice", "type": "REAL" },
+                { "name": "compositePrice", "type": "REAL" },
+                { "name": "priceRange", "type": "REAL" },
+                { "name": "contributors", "type": "INTEGER" },
+                { "name": "priceStddev", "type": "REAL" },
+                { "name": "strike", "type": "VARCHAR", "size": "20" },
+                { "name": "vol", "type": "REAL" },
+                { "name": "reconstitutedForward", "type": "REAL" },
+                { "name": "consensusVol", "type": "REAL" },
+                { "name": "compositeVol", "type": "REAL" },
+                { "name": "volRange", "type": "REAL" },
+                { "name": "expiryDate", "type": "VARCHAR", "size": "10" },
+                { "name": "volStddev", "type": "REAL" }
+            ],
+            "sortkey":"valuationdate"
+        },
+        {
+            "table": "tcc_totem",
+    		"schemaName": "eaa_dev",
+            "new": "N",
+            "fields": [
+                { "name": "valuationdate", "type": "DATE" },
+                { "name": "clientid", "type": "INTEGER" },
+                { "name": "name", "type": "VARCHAR", "size": "200" },
+                { "name": "totemgroup", "type": "VARCHAR", "size": "100" },
+                { "name": "units", "type": "VARCHAR", "size": "50" },
+                { "name": "pricingtime", "type": "VARCHAR", "size": "50" },
+                { "name": "period", "type": "VARCHAR", "size": "30" },
+                { "name": "startDate", "type": "VARCHAR", "size": "10" },
+                { "name": "endDate", "type": "VARCHAR", "size": "10" },
+                { "name": "totemtype", "type": "VARCHAR", "size": "10" },
+                { "name": "price", "type": "REAL" },
+                { "name": "consensusPrice", "type": "REAL" },
+                { "name": "compositePrice", "type": "REAL" },
+                { "name": "priceRange", "type": "REAL" },
+                { "name": "contributors", "type": "INTEGER" },
+                { "name": "priceStddev", "type": "REAL" },
+                { "name": "strike", "type": "VARCHAR", "size": "20" },
+                { "name": "vol", "type": "REAL" },
+                { "name": "reconstitutedForward", "type": "REAL" },
+                { "name": "consensusVol", "type": "REAL" },
+                { "name": "compositeVol", "type": "REAL" },
+                { "name": "volRange", "type": "REAL" },
+                { "name": "expiryDate", "type": "VARCHAR", "size": "10" },
+                { "name": "volStddev", "type": "REAL" }
+            ],
+            "sortkey":"valuationdate"
+        }
+    ]
+}

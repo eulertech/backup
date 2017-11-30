@@ -1,0 +1,14 @@
+{
+	"destinationSchema": "eaa_dev",
+	"tableName": "Phoenix_Documents",
+	"PhoenixDocumentService": "http://localhost:52710/api/Phoenix/GetAllPhoenixDocs",
+	"psSqlScript" : "CreatePhoenixDocumentsTablesTemplate.sql",	
+	"delimiter" : ",",	
+  "psInfo": {
+    "dataBase": "EAA",
+    "hostName": "localhost",
+    "Port": 5433,
+    "Username": "svc_dataloader",
+    "Password": "eaa303dev"
+  }	
+}

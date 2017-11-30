@@ -1,0 +1,2600 @@
+{
+	"destinationSchema": "eaa_stage",
+	"sqlScript": "CreateDWTablesTemplate.sql",
+	"tableName": "eaa",
+	"dataBaseColumns": ["name", "date", "value"],
+	"attributesBaseColumns": ["name", "label", "description", "source", "concept", "frequency", "forecast", "startDate", "endDate"],
+	"no_precision_types": ["BOOLEAN", "INTEGER", "REAL", "SMALLINT", "BIGINT", "FLOAT4", "FLOAT8", "FLOAT"],
+	"precision_types": ["DECIMAL", "NUMERIC"],
+	"computeSourceExemptions": ["Scenarios by Country"],
+	"catalogs": [
+		{
+			"createScript": "IEA_Create_PreProcessing.sql",
+			"tableName": "iea_dictionary",
+			"bucketName" : "ihs-bda-data",
+			"s3FileSource": "projects/Enrg_ExecutiveAffairsAuthority/IEA/iea_dictionary.xlsx",
+			"excelSheetName": 0,
+			"skipRows": 1,
+			"skipFooter": 0,
+			"delimiter": ",",
+			"pandasInputExt": "txt",
+			"fileFormat": "GZIP",
+			"dateFormat": "YYYY-MM-DD"
+		}
+	],
+	"cleanUpScript": "Cleanup_PostProcessing.sql",
+  	"applications": [
+  		{
+			"name": "JODI1",
+			"execute": "Y",
+			"preProcessScripts": {"name": "Jodi1PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "jodi_primary_vw",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "JODI", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "unit", "type": "field" },
+								{ "source": "flow", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "date", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "quantity", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "jodi_primary_vw",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "JODI", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "unit", "type": "field" },
+								{ "source": "flow", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ 
+									"source": "full_name", 
+									"from": "jodi_product", 
+									"matchSource": "product", 
+									"matchFrom": "name",
+									"sourceSchema":"eaa_stage", 
+									"filter": "{from}.file_table='primary'",
+									"type": "field"
+								},
+								{ 
+									"source": "uom", 
+									"from": "jodi_units", 
+									"matchSource": "unit", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage",
+									"type": "field" 
+								},
+								{ 
+									"source": "full_name", 
+									"from": "jodi_flow", 
+									"matchSource": "flow", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage",
+									"filter": "{from}.file_table='primary'", 
+									"type": "field" 
+								},
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ 
+									"source": "full_name", 
+									"from": "jodi_product", 
+									"matchSource": "product", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage",
+									"filter": "{from}.file_table='primary'", 
+									"type": "field"
+								},
+								{ 
+									"source": "uom", 
+									"from": "jodi_units", 
+									"matchSource": "unit", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage",
+									"type": "field" 
+								},
+								{ 
+									"source": "full_name", 
+									"from": "jodi_flow", 
+									"matchSource": "flow", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage",
+									"filter": "{from}.file_table='primary'", 
+									"type": "field" 
+								},
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "JODI Primary", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "M", "type": "constant" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "qualifier",
+							"type": "VARCHAR",
+							"length": "1024",
+							"value": [
+								{ 
+									"source": "description", 
+									"from": "jodi_qualifier", 
+									"matchSource": "code", 
+									"matchFrom": "code",
+									"sourceSchema":"eaa_stage", 
+									"type": "field"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "JODI2",
+			"execute": "Y",
+			"preProcessScripts": {"name": "Jodi2PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "jodi_secondary_vw",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "JODI", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "unit", "type": "field" },
+								{ "source": "flow", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "date", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "quantity", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "jodi_secondary_vw",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "JODI", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "unit", "type": "field" },
+								{ "source": "flow", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ 
+									"source": "full_name", 
+									"from": "jodi_product", 
+									"matchSource": "product", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage", 
+									"filter": "{from}.file_table='secondary'",
+									"type": "field"
+								},
+								{ 
+									"source": "uom", 
+									"from": "jodi_units", 
+									"matchSource": "unit", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage", 
+									"type": "field" 
+								},
+								{ 
+									"source": "full_name", 
+									"from": "jodi_flow", 
+									"matchSource": "flow", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage", 
+									"filter": "{from}.file_table='secondary'", 
+									"type": "field" 
+								},
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ 
+									"source": "full_name", 
+									"from": "jodi_product", 
+									"matchSource": "product", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage", 
+									"filter": "{from}.file_table='secondary'", 
+									"type": "field"
+								},
+								{ 
+									"source": "uom", 
+									"from": "jodi_units", 
+									"matchSource": "unit", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage", 
+									"type": "field" 
+								},
+								{ 
+									"source": "full_name", 
+									"from": "jodi_flow", 
+									"matchSource": "flow", 
+									"matchFrom": "name", 
+									"sourceSchema":"eaa_stage", 
+									"filter": "{from}.file_table='secondary'", 
+									"type": "field" 
+								},
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "JODI Secondary", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "M", "type": "constant" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "qualifier",
+							"type": "VARCHAR",
+							"length": "1024",
+							"value": [
+								{ 
+									"source": "description", 
+									"from": "jodi_qualifier", 
+									"matchSource": "code", 
+									"matchFrom": "code",
+									"sourceSchema":"eaa_stage", 
+									"type": "field"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "AutolvProduction",
+			"execute": "Y",
+			"preProcessScripts": {"name": "Autolvprod_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"transformScript": "Autolvprod_FixDates.sql",
+			"transpose": [
+				{ 
+					"alias": "alvprod_transposed",
+					"source": "auto_lv_production_grouped",
+					"select": ["country", "cartruck"], 
+					"unpivot": ["Jan10","Feb10","Mar10","Apr10","May10","Jun10","Jul10","Aug10","Sep10","Oct10","Nov10","Dec10","Jan11","Feb11","Mar11","Apr11","May11","Jun11","Jul11","Aug11","Sep11","Oct11","Nov11","Dec11","Jan12","Feb12","Mar12","Apr12","May12","Jun12","Jul12","Aug12","Sep12","Oct12","Nov12","Dec12","Jan13","Feb13","Mar13","Apr13","May13","Jun13","Jul13","Aug13","Sep13","Oct13","Nov13","Dec13","Jan14","Feb14","Mar14","Apr14","May14","Jun14","Jul14","Aug14","Sep14","Oct14","Nov14","Dec14","Jan15","Feb15","Mar15","Apr15","May15","Jun15","Jul15","Aug15","Sep15","Oct15","Nov15","Dec15","Jan16","Feb16","Mar16","Apr16","May16","Jun16","Jul16","Aug16","Sep16","Oct16","Nov16","Dec16","Jan17","Feb17","Mar17","Apr17","May17","Jun17","Jul17","Aug17","Sep17","Oct17","Nov17","Dec17","Jan18","Feb18","Mar18","Apr18","May18","Jun18","Jul18","Aug18","Sep18","Oct18","Nov18","Dec18","q12011","q22011","q32011","q42011","q12012","q22012","q32012","q42012","q12013","q22013","q32013","q42013","q12014","q22014","q32014","q42014","q12015","q22015","q32015","q42015","q12016","q22016","q32016","q42016","q12017","q22017","q32017","q42017","q12018","q22018","q32018","q42018","q12019","q22019","q32019","q42019","q12020","q22020","q32020","q42020","q12021","q22021","q32021","q42021","q12022","q22022","q32022","q42022","q12023","q22023","q32023","q42023","cy2011","cy2012","cy2013","cy2014","cy2015","cy2016","cy2017","cy2018","cy2019","cy2020","cy2021","cy2022","cy2023"],
+					"colDescriptionName": "dateConcept",
+					"colValueName": "dateValue"  
+				}
+			],
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "alvprod_transposed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "AutoProd", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ".", "''", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "dateConcept", "type": "field" , "dtFormat": "YYYY-MM-DD"}
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "dateValue", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "alvprod_transposed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "AutoProd", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ".", "''", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Auto Production", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Auto Production", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Autos: Production", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "frequency", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "true", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "AutolvSales",
+			"execute": "Y",
+			"preProcessScripts": {"name": "Autolvsales_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"transformScript": "Autolvsales_FixDates.sql",
+			"transpose": [
+				{ 
+					"alias": "alvsales_transposed",
+					"source": "auto_lv_sales_grouped",
+					"select": ["country", "cartruck"], 
+					"unpivot": ["cy2006","cy2007","cy2008","cy2009","cy2010","cy2011","cy2012","cy2013","cy2014","cy2015","cy2016","cy2017","cy2018","cy2019","cy2020","cy2021","cy2022","cy2023"],
+					"colDescriptionName": "dateConcept",
+					"colValueName": "dateValue"  
+				}
+			],
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "alvsales_transposed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "AutoSales", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ".", "''", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "dateConcept", "type": "field", "dtFormat": "YYYY-MM-DD" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "dateValue", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "alvsales_transposed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "AutoSales", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ".", "''", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Auto Sales", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Auto Sales", "type": "constant" },
+								{ "source": "cartruck", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Autos: Sales", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "frequency", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "true", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "AutoParc",
+			"execute": "Y",
+			"preProcessScripts": {"name": "AutoParc_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "auto_parc_grouped",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "AutoInventory", "type": "constant" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ".", "''", "-"], "with":""} },
+								{ "source": "fuel_type", "type": "field", "replace": {"chars": [" ", ".", "''", "-", "/"], "with":""} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "year", "type": "field", "dtFormat": "YYYY-MM-DD"}
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "total", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "auto_parc_grouped",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "AutoInventory", "type": "constant" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ".", "''", "-"], "with":""} },
+								{ "source": "fuel_type", "type": "field", "replace": {"chars": [" ", ".", "''", "-", "/"], "with":""} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Auto Inventory", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "fuel_type", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Auto Inventory", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "fuel_type", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Autos: Inventory (Parc)", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "Y", "type": "constant" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "true", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_BalanceCrude",
+			"execute": "Y",
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_balancescrude",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "CRUDEOIL", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "balance", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": [
+								{ "source": "period", "type": "field", "dtFormat": "MONYYYY" }
+							]
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_balancescrude",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "CRUDEOIL", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "balance", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Crude Oil Balance", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='CRUDEOIL' AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "balance", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='CRUDEOIL' AND {from}.field = 'BALANCE'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='GENERAL' AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Crude Oil Balance", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='CRUDEOIL' AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "balance", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='CRUDEOIL' AND {from}.field = 'BALANCE'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='GENERAL' AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA Balance: Crude Oil", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Balances", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_BalanceProduct",
+			"execute": "Y",
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_balancesproduct",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAPROD", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "balance", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field", "dtFormat": "MONYYYY" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_balancesproduct",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAPROD", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "balance", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "IEA Products", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "balance", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'BALANCE'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "IEA Products", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "balance", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'BALANCE'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA Balance: Product and Sub Product", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Balances", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_Demandnoecdde",
+			"execute": "Y",
+			"preProcessScripts": {"name": "IEADemandnoecdde_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_demandnoecdde_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "OILDEMAND", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_demandnoecdde_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "OILDEMAND", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Oil Products Demand", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Oil Products Demand", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('PRODUCTS', 'SUBPRODUCTS', 'GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA Non-OECD Demand", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_Demandoecdde",
+			"execute": "Y",
+			"preProcessScripts": {"name": "IEADemandoecdde_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_demandoecdde_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "OILDEMAND", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value":{ "source": "period", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_demandoecdde_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "OILDEMAND", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Oil Products Demand", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('OECDDEM', 'GENERAL') AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('OECDDEM', 'GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Oil Products Demand", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('OECDDEM', 'GENERAL') AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('OECDDEM', 'GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA OECD Demand", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_FieldByField",
+			"execute": "Y",
+			"preProcessScripts": {"name": "IEAFieldByField_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_fieldbyfield_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAFIELDS", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_fieldbyfield_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAFIELDS", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAFIELDS", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAFIELDS", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA Field-by-Field", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_Stocks",
+			"execute": "Y",
+			"preProcessScripts": {"name": "IEAStocks_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_stocks_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEASTOCKS", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "flow", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_stocks_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEASTOCKS", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "flow", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEA Closing Stocks", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('STOCKS','GENERAL') AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "flow", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('STOCKS','GENERAL') AND {from}.field = 'FLOW'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('STOCKS','GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEA Closing Stocks", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('STOCKS','GENERAL') AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "flow", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('STOCKS','GENERAL') AND {from}.field = 'FLOW'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source IN('STOCKS','GENERAL') AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA Stocks", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_Supply",
+			"execute": "Y",
+			"preProcessScripts": {"name": "IEASupply_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_supply_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEASUPPLY", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_supply_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEASUPPLY", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "IEA Supply", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='SUPPLY' AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='SUPPLY' AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "IEA Supply", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "product", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='SUPPLY' AND {from}.field = 'PRODUCT'",
+									"type": "field"
+								},
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='SUPPLY' AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA Supply", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value":{ "source": "Supply", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "IEA_WorldOilSupplyDemand",
+			"execute": "Y",
+			"preProcessScripts": {"name": "IEAWorldOilSupplyDemand_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "iea_worldoilsupplydemand_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAWORLDOIL", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "iea_worldoilsupplydemand_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "IEAWORLDOIL", "type": "constant" },
+								{ "source": "country", "type": "field" },
+								{ "source": "period_type", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "IEA World Oil Supply/Demand", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='SUMMARY' AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "IEA World Oil Supply/Demand", "type": "constant" },
+								{ 
+									"source": "description", 
+									"from": "iea_dictionary", 
+									"matchSource": "country", 
+									"matchFrom": "shortname", 
+									"sourceSchema": "eaa_stage",
+									"filter": "{from}.source='SUMMARY' AND {from}.field = 'COUNTRY'",
+									"type": "field"
+								}
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "IEA World Oil Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "period_type", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Chemicals",
+			"execute": "Y",	
+			"preProcessScripts": {"name": "Chemicals_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "chemicals_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "CHEM", "type": "constant" },
+								{ "source": "productid", "type": "field" },
+								{ "source": "category", "type": "field", "replace": {"chars": [" "], "with":""} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "years", "type": "field", "dtFormat": "YYYY" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "chemicals_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "CHEM", "type": "constant" },
+								{ "source": "productid", "type": "field" },
+								{ "source": "category", "type": "field", "replace": {"chars": [" "], "with":""} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Chemicals", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "category", "type": "field" },
+								{ "source": "location", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Chemicals", "type": "constant" },
+								{ "source": "product", "type": "field" },
+								{ "source": "category", "type": "field" },
+								{ "source": "location", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Chemicals Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "Y", "type": "constant" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "true", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Rigcount",
+			"execute": "Y",	
+			"preProcessScripts": {"name": "Rigcount_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "rigcount_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "category_cleaned", "type": "field", "replace": {"chars": [" ", "/"], "with":""} },
+								{ "source": "name", "type": "field", "replace": {"chars": [" ", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "valuationdate", "type": "field", "dtFormat": "MM/01/YYYY" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "wells", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "rigcount_fixed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "category_cleaned", "type": "field", "replace": {"chars": [" ", "/"], "with":""} },
+								{ "source": "name", "type": "field", "replace": {"chars": [" ", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "category", "type": "field" },
+								{ "source": "name", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "category", "type": "field" },
+								{ "source": "name", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Rig Count", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "M", "type": "constant" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "true", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Rigpoint_UtilMonthly",
+			"execute": "Y",
+			"transpose": [
+				{ 
+					"alias": "rigpointutilmon_transposed",
+					"source": "rigpoint_utilization_monthly",
+					"sourceSchema": "eaa_stage",
+					"select": ["month", "rig_type", "country"],
+					"unpivot": ["total_supply","marketed_supply","marketed_supply", "working", "total_util", "marketed_util"],
+					"colDescriptionName": "utilConcept",
+					"colValueName": "utilValue" 
+				}
+			],
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "rigpointutilmon_transposed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "utilConcept", "type": "field" },
+								{ "source": "rig_type", "type": "field" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ",", "''", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "month", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "utilValue", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "rigpointutilmon_transposed",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "utilConcept", "type": "field" },
+								{ "source": "rig_type", "type": "field" },
+								{ "source": "country", "type": "field", "replace": {"chars": [" ", ",", "''", "-"], "with":""} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "utilConcept", "type": "field" },
+								{ "source": "rig_type", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "Rigs", "type": "constant" },
+								{ "source": "utilConcept", "type": "field" },
+								{ "source": "rig_type", "type": "field" },
+								{ "source": "country", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Rigpoint Utilization", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "M", "type": "constant" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "ENP_Monthly",
+			"execute": "Y",	
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "enp_monthly",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "ENP", "type": "constant" },
+								{ "source": "description", "type": "field", "replace": {"chars": [" "], "with": ""} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "valuationdate", "type": "field", "dtFormat": "YYYY-MM-DD" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "enp_monthly",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "ENP", "type": "constant" },
+								{ "source": "description", "type": "field", "replace": {"chars": [" "], "with": ""} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "ENP", "type": "constant" },
+								{ "source": "category", "type": "field" },
+								{ "source": "description", "type": "field" },
+								{ "source": "unit", "type": "field" },
+								{ "source": "source", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "ENP", "type": "constant" },
+								{ "source": "category", "type": "field" },
+								{ "source": "description", "type": "field" },
+								{ "source": "unit", "type": "field" },
+								{ "source": "source", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "ENP Monthly", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "frequency", "type": "field" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "false", "type": "constant" }
+						},
+						{
+							"name": "startDate",
+							"type": "COMPUTED"
+						},
+						{
+							"name": "endDate",
+							"type": "COMPUTED"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "EIA_PetImports",
+			"execute": "Y",	
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "eia_pet_imports_series_data",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "EIA", "type": "constant" },
+								{ "source": "series_id", "type": "field", "replace": {"chars": ["-"], "with": "."} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field", "dtFormat": "YYYYMM" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "eia_pet_imports_series_attributes",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "EIA", "type": "constant" },
+								{ "source": "series_id", "type": "field", "replace": {"chars": ["-"], "with": "."} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "name", "type": "field" },
+								{ "source": "units", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "name", "type": "field" },
+								{ "source": "units", "type": "field" },
+								{ "source": "source", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "EIA: Petroleum Imports", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Imports", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "CASE WHEN (f = 'A') THEN 'Y' ELSE f END", "type": "query" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "CASE WHEN (DATE_PART_YEAR(TO_DATE(\"end\", 'YYYYMM')) > DATE_PART_YEAR(TO_DATE(CURRENT_DATE, 'YYYY-MM-DD'))) THEN true ELSE false END", "type": "query" }
+						},
+						{
+							"name": "startDate",
+							"type": "DATE",
+							"value": { "source": "start", "type": "field", "dtFormat": "YYYYMM" }
+						},
+						{
+							"name": "endDate",
+							"type": "DATE",
+							"value": { "source": "\"end\"", "type": "field", "dtFormat": "YYYYMM" }
+						},
+						{
+							"name": "latlon",
+							"type": "VARCHAR",
+							"length": "50",
+							"value": { "source": "latlon", "type": "field" }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "EIA_Pet",
+			"execute": "Y",
+			"preProcessScripts": {"name": "EIA_Pet_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "eia_pet_series_data_cleaned",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "EIA", "type": "constant" },
+								{ "source": "series_id", "type": "field", "replace": {"chars": ["-"], "with": "."} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field", "dtFormat": "YYYYMMDD" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "eia_pet_series_attributes_cleaned",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "EIA", "type": "constant" },
+								{ "source": "series_id", "type": "field", "replace": {"chars": ["-"], "with": "."} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "name", "type": "field" },
+								{ "source": "unitsshort", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "name", "type": "field" },
+								{ "source": "unitsshort", "type": "field" },
+								{ "source": "source", "type": "field" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "EIA: Petroleum Series", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "CASE WHEN (f = 'A') THEN 'Y' ELSE f END", "type": "query" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "CASE WHEN (DATE_PART_YEAR(TO_DATE(\"end\", 'YYYYMM')) > DATE_PART_YEAR(TO_DATE(CURRENT_DATE, 'YYYY-MM-DD'))) THEN true ELSE false END", "type": "query" }
+						},
+						{
+							"name": "startDate",
+							"type": "DATE",
+							"value": { "source": "start", "type": "field", "dtFormat": "YYYYMMDD" }
+						},
+						{
+							"name": "endDate",
+							"type": "DATE",
+							"value": { "source": "\"end\"", "type": "field", "dtFormat": "YYYYMMDD" }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "EIA_Steo",
+			"execute": "Y",
+			"preProcessScripts": {"name": "EIA_Steo_PreProcessing.sql", "sourceSchema": "eaa_stage"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "eia_steo_series_data_cleaned",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "EIA", "type": "constant" },
+								{ "source": "series_id", "type": "field", "replace": {"chars": ["-"], "with": "."} }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "period", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "eia_steo_series_attributes_cleaned",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "EIA", "type": "constant" },
+								{ "source": "series_id", "type": "field", "replace": {"chars": ["-"], "with": "."} }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "name", "type": "field" },
+								{ "source": "units", "type": "field" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"value": { "source": "CASE WHEN trim(description) = 'NA' THEN name + ';' + units + ';' + source ELSE name + ';' + units + ';' + source + ';' + description END", "type": "query" }
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "EIA: Short-Term Economic Outlook", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "CASE WHEN (f = 'A') THEN 'Y' ELSE f END", "type": "query" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "CASE WHEN (DATE_PART_YEAR(TO_DATE(\"end\", 'YYYY-MM-DD')) > DATE_PART_YEAR(TO_DATE(CURRENT_DATE, 'YYYY-MM-DD'))) THEN true ELSE false END", "type": "query" }
+						},
+						{
+							"name": "startDate",
+							"type": "DATE",
+							"value": { "source": "start", "type": "field" }
+						},
+						{
+							"name": "endDate",
+							"type": "DATE",
+							"value": { "source": "\"end\"", "type": "field" }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "econConnect",
+			"execute": "Y",
+			"preProcessScripts": {"name": "econConnect_PreProcessing.sql", "sourceSchema": "hindsight_prod"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "econconnect_data_cleaned",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": { "source": "mnemonic", "type": "field" }
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "date", "type": "field" }
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "datavalue", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "econconnect_attributes_cleaned",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": { "source": "mnemonic", "type": "field" }
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": { "source": "mnemonic", "type": "field" }
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": { "source": "shortlabel", "type": "field"}
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Connect", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Economic Series", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "CASE frequency WHEN 'ANNL' THEN 'Y' WHEN 'SANN' THEN 'S' WHEN 'QUAR' THEN 'Q' WHEN 'MONT' THEN 'M' ELSE 'O' END", "type": "query" }
+						},
+						{
+							"name": "forecast",
+							"type": "BOOLEAN",
+							"value": { "source": "CASE WHEN (DATE_PART_YEAR(TO_DATE(\"enddate\", 'MM/DD/YYYY')) > DATE_PART_YEAR(TO_DATE(CURRENT_DATE, 'YYYY-MM-DD'))) THEN true ELSE false END", "type": "query" }
+						},
+						{
+							"name": "startDate",
+							"type": "DATE",
+							"value": { "source": "startdate", "type": "field", "dtFormat": "MM/DD/YYYY"}
+						},
+						{
+							"name": "endDate",
+							"type": "DATE",
+							"value": { "source": "enddate", "type": "field", "dtFormat": "MM/DD/YYYY" }
+						},
+						{
+							"name": "series_id",
+							"type": "INTEGER",
+							"value": { "source": "series_id", "type": "field" }
+						},
+						{
+							"name": "conceptcode",
+							"type": "VARCHAR",
+							"length": "15",
+							"value": { "source": "concept", "type": "field" }
+						},
+						{
+							"name": "unit",
+							"type": "VARCHAR",
+							"length": "15",
+							"value": { "source": "unit", "type": "field" }
+						},
+						{
+							"name": "industry",
+							"type": "VARCHAR",
+							"length": "50",
+							"value":{ "source": "industry", "type": "field" }
+						},
+						{
+							"name": "geo",
+							"type": "VARCHAR",
+							"length": "15",
+							"value": { "source": "geo", "type": "field" }
+						},
+						{
+							"name": "sourceCode",
+							"type": "VARCHAR",
+							"length": "1024",
+							"value": { "source": "source", "type": "field" }
+						},
+						{
+							"name": "seriestype",
+							"type": "VARCHAR",
+							"length": "15",
+							"value": { "source": "seriestype", "type": "field" }
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Scenarios",
+			"execute": "Y",
+			"postProcessScripts": {"name": "Scenarios_PostProcessing.sql"},
+			"mapping": [
+				{
+					"destination": "data",
+					"source": "scenario_data",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "scenario_key", "type": "field" }
+							]
+						},
+						{
+							"name": "date",
+							"type": "DATE",
+							"value": { "source": "date", "type": "field", "dtFormat": "YYYY-MM-DD"}
+						},
+						{
+							"name": "value",
+							"type": "REAL",
+							"value": { "source": "value", "type": "field" }
+						}
+					]
+				},
+				{
+					"destination": "attributes",
+					"source": "scenario_attributes",
+					"sourceSchema": "eaa_stage",
+					"cols": [
+						{
+							"name": "name",
+							"type": "VARCHAR",
+							"delimiter": ".",
+							"value": [
+								{ "source": "scenario_key", "type": "field" }
+							]
+						},
+						{
+							"name": "label",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "'Scenarios' || (case isnull(longname,'') when '' then '' else '; ' || longname end) || (case isnull(region,'') when '' then '' else '; ' || region end)", "type": "query" }
+							]
+						},
+						{
+							"name": "description",
+							"type": "VARCHAR",
+							"delimiter": "; ",
+							"value": [
+								{ "source": "'Scenarios' || (case isnull(longname,'') when '' then '' else '; ' || longname end) || (case isnull(unit,'') when '' then '' else '; ' || unit end) || (case isnull(region,'') when '' then '' else '; ' || region end) || (case isnull(scenario_name,'') when '' then '' else '; ' || scenario_name end)", "type": "query" }
+							]
+						},
+						{
+							"name": "source",
+							"type": "VARCHAR",
+							"value": { "source": "Scenarios by Country", "type": "constant" }
+						},
+						{
+							"name": "concept",
+							"type": "VARCHAR",
+							"value": { "source": "Supply/Demand", "type": "constant" }
+						},
+						{
+							"name": "frequency",
+							"type": "VARCHAR",
+							"value": { "source": "Y", "type": "constant" }
+						}
+					]
+				}
+			]
+		}
+	]
+}

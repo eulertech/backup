@@ -1,0 +1,44 @@
+{
+	"name": "RigPointAthenaSpark",
+    "cleanlocal" : "N",	
+	"folders": [
+    	{ "name": "sql", "folder": "sql", "new": "Y" },
+    	{ "name": "csv", "folder": "csv", "new": "Y" },
+    	{ "name": "raw", "folder": "raw", "new": "Y" },
+    	{ "name": "parquet", "folder": "parquet", "new": "Y" }
+	],    
+	"reports": [
+		{
+        	"name": "utilization_monthly",
+        	"fileInputExt": "xls",
+        	"fileInputPrefix": "RP_Utilization_",
+            "excelSheetNo": 0,
+            "skipRows": 12,
+            "skipFooter": 1
+        }
+	],
+   "tables": [{
+    		"schemaName": "energy_prod",
+            "table": "rigpoint_utilization_monthly",
+            "srcBucketName": "ihs-bda-data",
+			"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/RIGPOINT",
+			"delimiter" : ",",
+    		"loadToRedshift": "Y", 
+       		"adjustFormat":[
+                { "name": "monthperiod", "inputFormat": "yyyy-mm-dd" }
+    		],
+            "new": "Y",
+            "fields": [
+                { "name": "monthperiod", "type": "DATE" },
+                { "name": "rig_type", "type": "VARCHAR", "size": "30" },
+                { "name": "country", "type": "VARCHAR", "size": "30" },
+                { "name": "total_supply", "type": "REAL" },
+                { "name": "marketed_supply", "type": "REAL" },
+                { "name": "working", "type": "REAL" },
+                { "name": "total_util", "type": "REAL" },
+                { "name": "marketed_util", "type": "REAL" }
+            ],
+            "sortkey":"monthperiod"
+        }        
+    ]	
+}

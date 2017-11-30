@@ -1,0 +1,195 @@
+[
+  {
+    "ParamName": "filter.minCoveragePct",
+    "ShortDef": "Minimum time range overlap",
+    "HelpTopic": "SpectreParam_filter_minCoveragePct",
+    "DataType": "I",
+    "DefaultValue": null,
+  	"ExampleValue": 70,
+  	"RangeMin" : 0,
+  	"RangeMax" : 100,
+  	"Enum": null,
+  	"ValidationFct" : null
+  },
+  {
+    "ParamName": "depVarId",
+    "ShortDef": "Dependant Variables IDs",
+    "HelpTopic": "SpectreParam_depVarId",
+    "DataType": "SV"
+  },
+  {
+    "ParamName": "frequency",
+    "ShortDef": "Frequency of the time series",
+    "HelpTopic": "SpectreParam_frequency",
+    "DataType": "S",
+    "DefaultValue": "MONT",
+	  "ExampleValue": "MONT",
+	  "Enum": "DAY|MONT|QUAR|ANNL"
+  },
+  {
+    "ParamName": "dateFrom",
+    "ShortDef": "Start date ('yyyy-mm-dd') of the time series",
+    "HelpTopic": "SpectreParam_DateRange",
+    "DataType": "S",
+	  "ExampleValue": "2001-06-22"
+  },
+  {
+    "ParamName": "dateTo",
+    "ShortDef": "End date ('yyyy-mm-dd') of the time series",
+    "HelpTopic": "SpectreParam_DateRange",
+    "DataType": "S",
+	  "ExampleValue": "2021-12-31"
+  },
+  {
+    "ParamName": "maxNAs",
+    "ShortDef": "Maximum number of NAs allowed, overall",
+    "HelpTopic": "SpectreParam_maxNAs",
+    "DataType": "I",
+    "DefaultValue": null,
+	  "RangeMin" : 0
+  },
+  {
+    "ParamName": "whiteList",
+    "ShortDef": "A user defined variables white list.",
+    "HelpTopic": "SpectreParam_whiteList",
+    "DataType": "LO",
+    "DefaultValue": null
+  },
+  {
+    "ParamName": "blackList",
+    "ShortDef": "A user defined varaibles black list.",
+    "HelpTopic": "SpectreParam_Lists"
+  },
+  {
+    "ParamName": "trainPeriods",
+    "ShortDef": "Number of training periods.",
+    "HelpTopic": "SpectreParam_Periods"
+  },
+  {
+    "ParamName": "validationPeriods",
+    "ShortDef": "Number of validation periods.",
+    "HelpTopic": "SpectreParam_Periods"
+  },
+  {
+    "ParamName": "forecastPeriods",
+    "ShortDef": "Number of forecast periods.",
+    "HelpTopic": "SpectreParam_Periods"
+  },
+  {
+    "ParamName": "topPct",
+    "ShortDef": "Percentage difference threshold for left tail outlier identification.",
+    "HelpTopic": "SpectreParam_Outliers"
+  },
+  {
+    "ParamName": "bottomPct",
+    "ShortDef": "Percentage difference threshold for right tail outlier identification.",
+    "HelpTopic": "SpectreParam_Outliers"
+  },
+  {
+    "ParamName": "method",
+    "ShortDef": "Outlier treatment method.",
+    "HelpTopic": "SpectreParam_Outliers"
+  },
+  {
+    "ParamName": "delta",
+    "ShortDef": "Sets the use or not of structural change identification.",
+    "HelpTopic": "SpectreParam_Outliers"
+  },
+  {
+    "ParamName": "stChangePoints",
+    "ShortDef": "How many minimum periods to be considered as structural change.",
+    "HelpTopic": "SpectreParam_Outliers"
+  },
+  {
+    "ParamName": "controlLimits",
+    "ShortDef": "Sets the use or not of outlier identification in forecasts.",
+    "HelpTopic": "SpectreParam_controlLimits"
+  },
+  {
+    "ParamName": "seasonality",
+    "ShortDef": "Sets the use or not of seasonality variables.",
+    "HelpTopic": "SpectreParam_Models"
+  },
+  {
+    "ParamName": "useArimax",
+    "ShortDef": "Sets the use or not of Arimax modelling.",
+    "HelpTopic": "SpectreParam_Models"
+  },
+  {
+    "ParamName": "alpha",
+    "ShortDef": "Significance level.",
+    "HelpTopic": "SpectreParam_Models"
+  },
+  {
+    "ParamName": "magnitudeChange",
+    "ShortDef": "Magnitude change threshold.",
+    "HelpTopic": "SpectreParam_Models"
+  },
+  {
+    "ParamName": "train.MAPE",
+    "ShortDef": "Training MAPE threshold.",
+    "HelpTopic": "SpectreParam_ModelSelection"
+  },
+  {
+    "ParamName": "valid.MAPE",
+    "ShortDef": "Validation MAPE threshold.",
+    "HelpTopic": "SpectreParam_ModelSelection"
+  },
+  {
+    "ParamName": "valid.magnitudeChange",
+    "ShortDef": "Validation magnitude change threshold.",
+    "HelpTopic": "SpectreParam_ModelSelection"
+  },
+  {
+    "ParamName": "valid.trendCapture",
+    "ShortDef": "Trend capture rate threshold.",
+    "HelpTopic": "SpectreParam_ModelSelection"
+  },
+  {
+    "ParamName": "ensemble.weight",
+    "ShortDef": "Metric used to weight the models in ensemble.",
+    "HelpTopic": "SpectreParam_Ensemble"
+  },
+  {
+    "ParamName": "ensemble.type",
+    "ShortDef": "Type of weight used to ensemble.",
+    "HelpTopic": "SpectreParam_Ensemble"
+  },
+  {
+    "ParamName": "ensemble.nbOfModels",
+    "ShortDef": "Number of models to ensemble.",
+    "HelpTopic": "SpectreParam_Ensemble"
+  },
+  {
+    "ParamName": "y",
+    "ShortDef": "Dependent variable as external data.",
+    "HelpTopic": "SpectreParam_y"
+  },
+  {
+    "ParamName": "stationaryMethod",
+    "ShortDef": "Stationarity testing method",
+    "HelpTopic": "SpectreParams_StationaryMethod"
+  },
+    {
+    "ParamName": "stationarySignificance",
+    "ShortDef": "Significance level for stationarity test",
+    "HelpTopic": "SpectreParams_StationarySignificance"
+  },
+      {
+    "ParamName": "interactions",
+    "ShortDef": "Sets the use or not interactions in modelling",
+    "HelpTopic": "SpectreParam_Interactions"
+  },
+  {
+    "ParamName": "template_record_for_new_params",
+    "ShortDef": "",
+    "HelpTopic": "SpectreParam_xxx",
+    "DataType": "I",
+    "DefaultValue": null,
+  	"ExampleValue": null,
+  	"RangeMin" : null,
+  	"RangeMax" : null,
+  	"Enum": null,
+  	"ValidationFct" : ""
+  }
+]

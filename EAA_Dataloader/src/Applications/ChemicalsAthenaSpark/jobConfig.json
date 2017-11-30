@@ -1,0 +1,49 @@
+{
+    "Name": "ChemicalsAthenaSpark",
+    "fieldTerminator": "|",
+    "cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" }        
+    ],
+    "Databases": [
+    {
+        "execute": "Y",
+		"common": {		
+	        "name": "WASP_2016T",
+			"server": "10.45.88.171",
+			"driver": "{ODBC Driver 11 for SQL Server}",
+			"user": "tugboat",
+			"pwd": "trial,246"
+		},
+        "catalogs":[
+        {
+        	
+    		"execute": "Y",
+    		"name": "Chemicals",
+		    "tables": [
+			{
+	    		"schemaName": "energy_prod",
+	            "table": "Chemicals",
+	            "new": "Y",
+				"pullTemplate": "GetChemicalsDataTemplate.sql",
+				"sourcetable": "Chemicals",
+	    		"loadToRedshift": "Y",
+	            "fields": [
+	                { "name": "ProductID", "type": "VARCHAR", "size": "10" },
+	                { "name": "Product", "type": "VARCHAR", "size": "200" },
+	                { "name": "LocationID", "type": "VARCHAR", "size": "10" },
+	                { "name": "Location", "type": "VARCHAR", "size": "200" },
+	                { "name": "Category_ID", "type": "INTEGER"},
+	                { "name": "Category", "type": "VARCHAR", "size": "200" },
+	                { "name": "Years", "type": "REAL" },                
+	                { "name": "Value", "type": "FLOAT8" }
+	            ]                
+	        }]
+	    }]
+    
+    }],
+	"mssqlLoginInfo": "-S 10.45.88.171 -U tugboat -P trial,246 -dWASP_2016T ",
+	"bcpUtilityDirOnLinux": "/opt/mssql-tools/bin"
+}

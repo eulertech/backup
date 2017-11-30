@@ -1,0 +1,99 @@
+{
+    "destinationSchema": "eaa_dev",
+    "bucketName": "ihs-bda-data",
+    "s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/Magellan",
+    "sqlUpdateScript" : "MagellanODATATemplate.sql",
+    "fileFormat": "GZIP",
+    "delimiter": ",",
+    "dateFormat": "auto",
+    "cleanlocal" : "Y",    
+    "ODATAbatchsize": 1000,
+    "maxretries": 3,
+    "sleepBeforeRetry": 5,
+    "daysback": 3,
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "data", "folder": "csv/data", "new": "Y" },
+        { "name": "attribute", "folder": "csv/attribute", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" }
+    ],
+    "ODATA": {
+        "endpoint": "http://gda-tdp-test-03.globalintech.pl/DataPlatform/",
+        "Catalogs": [{
+            "execute": "Y",
+            "name": "Magellan",
+            "tables": [{
+            		"schemaName": "eaa_dev",
+                    "table": "magellan_attributes_working",
+                    "destName": "tmagellan_attributes",
+                    "s3subfolder": "attribute",
+                    "new": "Y",
+                    "type": "attributes",
+                    "fields": [
+                        { "name": "source_id", "type": "VARCHAR", "size": "20" },
+                        { "name": "dri_mnemonic", "type": "VARCHAR", "size": "100" },
+                        { "name": "start_date", "type": "VARCHAR", "size": "10" },
+                        { "name": "end_date", "type": "VARCHAR", "size": "10" },
+                        { "name": "base_period_value", "type": "VARCHAR", "size": "20" },
+                        { "name": "short_label", "type": "VARCHAR", "size": "1000" },
+                        { "name": "long_label", "type": "VARCHAR", "size": "2000" },
+                        { "name": "explorer_label", "type": "VARCHAR", "size": "1300" },
+                        { "name": "last_update_date", "type": "VARCHAR", "size": "10" },
+                        { "name": "document_type", "type": "VARCHAR", "size": "20" },
+                        { "name": "wefa_mnemonic", "type": "VARCHAR", "size": "20" }
+                    ],
+            		"sortkey":"source_id"                    
+                },
+                {
+            		"schemaName": "eaa_dev",
+                    "table": "magellan_data_working",
+                    "destName": "tmagellan_data",
+                    "s3subfolder": "data",
+                    "new": "Y",
+                    "type": "series",
+                    "fields": [
+                        { "name": "source_id", "type": "VARCHAR", "size": "20" },
+                        { "name": "date", "type": "DATE" },
+                        { "name": "value", "type": "FLOAT4" }
+                    ],
+            		"sortkey":"source_id, date"                    
+                },
+				{
+            		"schemaName": "eaa_dev",
+                    "table": "tmagellan_attributes",
+                    "new": "N",
+                    "type": "attributes",
+                    "fields": [
+                        { "name": "source_id", "type": "VARCHAR", "size": "20" },
+                        { "name": "dri_mnemonic", "type": "VARCHAR", "size": "100" },
+                        { "name": "start_date", "type": "VARCHAR", "size": "10" },
+                        { "name": "end_date", "type": "VARCHAR", "size": "10" },
+                        { "name": "base_period_value", "type": "VARCHAR", "size": "20" },
+                        { "name": "short_label", "type": "VARCHAR", "size": "1000" },
+                        { "name": "long_label", "type": "VARCHAR", "size": "2000" },
+                        { "name": "explorer_label", "type": "VARCHAR", "size": "1300" },
+                        { "name": "last_update_date", "type": "VARCHAR", "size": "10" },
+                        { "name": "document_type", "type": "VARCHAR", "size": "20" },
+                        { "name": "wefa_mnemonic", "type": "VARCHAR", "size": "20" }
+                    ],
+            		"sortkey":"source_id",                    
+            		"distkey":"source_id"                    
+                },
+                {
+            		"schemaName": "eaa_dev",
+                    "table": "tmagellan_data",
+                    "new": "N",
+                    "type": "series",
+                    "fields": [
+                        { "name": "source_id", "type": "VARCHAR", "size": "20" },
+                        { "name": "date", "type": "DATE" },
+                        { "name": "value", "type": "FLOAT4" }
+                    ],
+            		"sortkey":"source_id, date",                    
+            		"distkey":"source_id"                    
+                }                
+            ]
+        }]
+    }
+}

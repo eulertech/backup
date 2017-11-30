@@ -1,0 +1,5 @@
+C:\workspace\xlsbExtractor\xlsbExtractor\bin\Debug\xlsbExtractor.exe.config
+C:\workspace\xlsbExtractor\xlsbExtractor\bin\Debug\xlsbExtractor.exe
+C:\workspace\xlsbExtractor\xlsbExtractor\bin\Debug\xlsbExtractor.pdb
+C:\workspace\xlsbExtractor\xlsbExtractor\obj\Debug\xlsbExtractor.exe
+C:\workspace\xlsbExtractor\xlsbExtractor\obj\Debug\xlsbExtractor.pdb

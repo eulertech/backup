@@ -1,0 +1,376 @@
+{
+  "destinationSchema": "pgcr_dev",
+  "sqlScript": "CreateEIA923TablesTemplate.sql",
+  "postETLQueries":"postETLQueries.sql",
+  "tableName": "EiaF923_",
+  "bucketName": "ihs-bda-data",
+  "delimiter": ",",
+  "fileFormat": "GZIP",
+  "srcfileFormat": ".zip",
+  "dateFormat": "YYYY-MM-DD",
+  "s3SrcDirectory": "projects/Pgcr_WindDashboard/Raw/FormEIA-923",
+  "s3ToDirectory": "/projects/Pgcr_WindDashboard/Cleaned/FormEIA-923/",
+  "ExcelSheets": [
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 1 Generation and Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P1GenFuel",
+    	"Year": "2011"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 1 Generation and Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P1GenFuel",
+    	"Year": "2012"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 1 Generation and Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P1GenFuel",
+    	"Year": "2013"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 1 Generation and Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P1GenFuel",
+    	"Year": "2014"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 1 Generation and Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P1GenFuel",
+    	"Year": "2015"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 1 Generation and Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P1GenFuel",
+    	"Year": "2016"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 1 Generation and Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P1GenFuel",
+    	"Year": "2017"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 2 Stocks Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P2Stocks",
+    	"Year": "2011"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 2 Stocks Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P2Stocks",
+    	"Year": "2012"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 2 Stocks Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P2Stocks",
+    	"Year": "2013"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 2 Stocks Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P2Stocks",
+    	"Year": "2014"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 2 Stocks Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P2Stocks",
+    	"Year": "2015"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 2 Stocks Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P2Stocks",
+    	"Year": "2016"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 2 Stocks Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P2Stocks",
+    	"Year": "2017"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 3 Boiler Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P3BoilerFuel",
+    	"Year": "2011"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 3 Boiler Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P3BoilerFuel",
+    	"Year": "2012"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 3 Boiler Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P3BoilerFuel",
+    	"Year": "2013"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 3 Boiler Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P3BoilerFuel",
+    	"Year": "2014"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 3 Boiler Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P3BoilerFuel",
+    	"Year": "2015"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 3 Boiler Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P3BoilerFuel",
+    	"Year": "2016"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 3 Boiler Fuel Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P3BoilerFuel",
+    	"Year": "2017"
+	  },
+  	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 4 Generator Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P4Generator",
+    	"Year": "2011"
+	  }, 
+  	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 4 Generator Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P4Generator",
+    	"Year": "2012"
+	  }, 
+  	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 4 Generator Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P4Generator",
+    	"Year": "2013"
+	  }, 
+  	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 4 Generator Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P4Generator",
+    	"Year": "2014"
+	  }, 
+  	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 4 Generator Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P4Generator",
+    	"Year": "2015"
+	  }, 
+  	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 4 Generator Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P4Generator",
+    	"Year": "2016"
+	  }, 
+  	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 4 Generator Data",
+	  	"Skip": [1, 2, 3, 4, 5, 6],
+	  	"redshiftTableSuffix": "P4Generator",
+    	"Year": "2017"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 5 Fuel Receipts and Costs",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P5FuelReceiptsAndCostsNoMercury",
+    	"Year": "2011"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 5 Fuel Receipts and Costs",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P5FuelReceiptsAndCostsWithMercury",
+    	"Year": "2012"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 5 Fuel Receipts and Costs",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P5FuelReceiptsAndCostsNoMercury",
+    	"Year": "2013"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 5 Fuel Receipts and Costs",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P5FuelReceiptsAndCostsWithMercury",
+    	"Year": "2014"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 5 Fuel Receipts and Costs",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P5FuelReceiptsAndCostsWithMercury",
+    	"Year": "2015"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 5 Fuel Receipts and Costs",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P5FuelReceiptsAndCostsWithMercury",
+    	"Year": "2016"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 5 Fuel Receipts and Costs",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P5FuelReceiptsAndCostsWithMercury",
+    	"Year": "2017"
+	  }, 
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 6 Plant Frame",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P6PlantFrame2011",
+    	"Year": "2011"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 6 Plant Frame",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P6PlantFrame2012",
+    	"Year": "2012"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 6 Plant Frame",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P6PlantFrame2013",
+    	"Year": "2013"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 6 Plant Frame",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P6PlantFrame2014to15",
+    	"Year": "2014"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 6 Plant Frame",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P6PlantFrame2014to15",
+    	"Year": "2015"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 6 Plant Frame",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P6PlantFrame2016Onwards",
+    	"Year": "2016"
+	  },
+	  {
+	  	"FileRegex": "*2_3_4_5*",
+	  	"Sheet": "Page 6 Plant Frame",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "P6PlantFrame2016Onwards",
+    	"Year": "2017"
+	  },
+	  {
+	  	"FileRegex": "*6_7*",
+	  	"Sheet": "Source_and_disposition, 2011",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "SourceDispositionTill2011",
+    	"Year": "2011"
+	  },
+	  {
+	  	"FileRegex": "*6_7*",
+	  	"Sheet": "Source_and_disposition",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "SourceDisposition2012Onwards",
+    	"Year": "2012"
+	  },
+	  {
+	  	"FileRegex": "*6_7*",
+	  	"Sheet": "Source_and_disposition, 2013",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "SourceDisposition2012Onwards",
+    	"Year": "2013"
+	  },
+	  {
+	  	"FileRegex": "*6_7*",
+	  	"Sheet": "Source_and_disposition",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "SourceDisposition2012Onwards",
+    	"Year": "2014"
+	  },
+	  {
+	  	"FileRegex": "*6_7*",
+	  	"Sheet": "Source_and_disposition",
+	  	"Skip": [1, 2, 3, 4, 5],
+	  	"redshiftTableSuffix": "SourceDisposition2012Onwards",
+    	"Year": "2015"
+	  }
+  
+	],
+
+  "srcFileParameters": [
+    {
+      "s3Filename": "f923_2011",
+      "SubFolder": "2011"
+    },
+    {
+      "s3Filename": "f923_2012",
+      "SubFolder": "2012"
+    },
+    {
+      "s3Filename": "f923_2013",
+      "SubFolder": "2013"
+    },
+    {
+      "s3Filename": "f923_2014",
+      "SubFolder": "2014"
+    },
+    {
+      "s3Filename": "f923_2015",
+      "SubFolder": "2015"
+    },
+    {
+      "s3Filename": "f923_2016",
+      "SubFolder": "2016"
+    },
+    {
+      "s3Filename": "f923_2017",
+      "SubFolder": "2017"
+    }
+  ]
+}

@@ -1,0 +1,507 @@
+{
+	"destinationSchema": "hindsight_federated",
+	"cleanUpScript": "CleanUp.sql",
+	"bucketName" : "ihs-bda-data",
+	"s3SrcDirectory": "projects/Enrg_ExecutiveAffairsAuthority/HindSightFederated/",
+	"buildLatestVersion": "N",
+	"s3partitions": 48,
+	"federatedTables": {
+		"seriesAttributes": {
+			"history": {"name": "series_attributes_history", "new": "N"},
+			"latest": {"name": "series_attributes", "new": "N"},
+			"fields": [
+				{ "name": "name", "type": "VARCHAR", "size": "512" },
+				{ "name": "label", "type": "VARCHAR", "size": "1024" },
+				{ "name": "description", "type": "VARCHAR", "size": "2000" },
+				{ "name": "source", "type": "VARCHAR", "size": "50" },
+				{ "name": "concept", "type": "VARCHAR", "size": "50" },
+				{ "name": "frequency", "type": "VARCHAR", "size": "50" },
+				{ "name": "forecast", "type": "BOOLEAN" },
+				{ "name": "startDate", "type": "DATE" },
+				{ "name": "endDate", "type": "DATE" },
+				{ "name": "qualifier", "type": "VARCHAR", "size": "1024" },
+				{ "name": "latlon", "type": "VARCHAR", "size": "50" },
+				{ "name": "last_update_date", "type": "DATE" },
+				{ "name": "source_id", "type": "VARCHAR", "size": "20" },
+				{ "name": "version", "type": "DATE", "exclusiveTo": ["series_attributes_history"] }
+			],
+			"distkey":"name",
+			"sortkey_h": "name, source, version",
+			"sortkey": "name, source"
+		},
+		"seriesData": {
+			"history": {"name": "series_data_history", "new": "N"},
+			"latest": {"name": "series_data", "new": "N"},
+			"fields": [
+				{ "name": "name", "type": "VARCHAR", "size": "512" },
+				{ "name": "date", "type": "DATE" },
+				{ "name": "value", "type": "REAL" },
+				{ "name": "status", "type": "CHAR", "size": "1", "exclusiveTo": ["series_attributes_history"] },
+				{ "name": "version", "type": "DATE", "exclusiveTo": ["series_attributes_history"] }
+			],
+			"sortkey_h": "name, date, version",
+			"sortkey": "name, date"
+		}
+	},
+  	"timeSeriesApps": [
+  		{
+			"name": "eaa",
+			"execute": "N",
+			"sourceSchema": "eaa_stage",
+			"seriesAttributes": {
+				"view":{
+					"name": "vw_eaa_attributes",
+					"table": "eaa_attributes",
+					"filters": [
+						"source <> 'Connect'"
+					]
+				},
+				"mapping": [
+					{ "source": "name", "type": "field", "target": "name" },
+					{ "source": "label", "type": "field", "target": "label" },
+					{ "source": "description", "type": "field", "target": "description" },
+					{ "source": "EAA", "type": "constant", "target": "sourceApp" },
+					{ "source": "source", "type": "field", "target": "source" },
+					{ "source": "concept", "type": "field", "target": "concept" },
+					{ "source": "frequency", "type": "field", "target": "frequency" },
+					{ "source": "forecast", "type": "field", "target": "forecast" },
+					{ "source": "startDate", "type": "field", "target": "startDate" },
+					{ "source": "endDate", "type": "field", "target": "endDate" },
+					{ "source": "qualifier", "type": "field", "target": "qualifier" },
+					{ "source": "latlon", "type": "field", "target": "latlon" }
+				]
+			},
+			"seriesData": {
+				"transactions": ["insert", "update", "delete"],
+				"transactions_disabled": [],
+				"view":{
+					"name": "vw_eaa_data",
+					"table": "eaa_data",
+					"filters": [
+						"name in(select distinct name from {schemaName}.vw_eaa_attributes)"
+					]
+				},
+				"mapping": [
+					{ "source": "name", "type": "field", "target": "name" },
+					{ "source": "date", "type": "field", "target": "date" },
+					{ "source": "value", "type": "field", "target": "value" }
+				]
+			},
+			"incremental": ""
+		},
+		{
+			"name": "magellan",
+			"execute": "N",
+			"sourceSchema": "eaa_stage",
+			"seriesAttributes": {
+				"view":{
+					"name": "vw_magellan_attributes",
+					"table": "magellan_attributes",
+					"applyDistinct": "Y",
+					"filters": [
+						"((dri_mnemonic != '' and dri_mnemonic is not null) or (wefa_mnemonic != '' and wefa_mnemonic is not null)) and ",
+						"last_update_date > isnull((select max(last_update_date) from {schemaName}.series_attributes_history where source = 'Magellan'), '1900-01-01')"
+					]
+				},
+				"mapping": [
+					{ 
+						"source": "upper(case when (dri_mnemonic != '' and dri_mnemonic is not null) then dri_mnemonic else wefa_mnemonic end)", 
+						"type": "field", 
+						"target": "name"
+					},
+					{
+						"source": "case when (explorer_label != '' and explorer_label is not null) then explorer_label else upper(case when (dri_mnemonic != '' and dri_mnemonic is not null) then dri_mnemonic else wefa_mnemonic end) end", 
+						"type": "field", 
+						"target": "label" 
+					},
+					{ "source": "short_label", "type": "field", "target": "description" },
+					{ "source": "Magellan", "type": "constant", "target": "source" },
+					{ "source": "Economic Series", "type": "constant", "target": "concept" },
+					{ 
+						"source": "case split_part(upper(case when (dri_mnemonic != '' and dri_mnemonic is not null) then dri_mnemonic else wefa_mnemonic end), '.', 2) when 'A' then 'Y' when 'S' then 'S' when 'Q' then 'Q' when 'M' then 'M' when 'B' then 'B' when 'W' then 'W' when 'W1' then 'W' when 'D' then 'D' when 'D7' then 'D' else 'O' end", 
+						"type": "field", 
+						"target": "frequency" 
+					},
+					{ 
+						"source": "case when date_part_year(to_date(end_date, 'YYYY-MM-DD')) > (date_part_year(to_date(current_date, 'YYYY-MM-DD'))+1) then true else false end", 
+						"type": "field", 
+						"target": "forecast" 
+					},
+					{ "source": "to_date(start_date, 'YYYY-MM-DD')", "type": "field", "target": "startDate" },
+					{ "source": "to_date(end_date, 'YYYY-MM-DD')", "type": "field", "target": "endDate" },
+					{ "source": "source_id", "type": "field", "target": "source_id" },
+					{ "source": "to_date(last_update_date, 'YYYY-MM-DD')", "type": "field", "target": "last_update_date" }
+				]
+			},
+			"seriesData": {
+				"transactions": ["insert", "update", "delete"],
+				"transactions_disabled": [],
+				"view":{
+					"name": "vw_magellan_data",
+					"table": "magellan_data",
+					"joins": "inner join {sourceSchema}.magellan_attributes b on b.source_id = {sourceSchema}.magellan_data.source_id"
+				},
+				"mapping": [
+					{ 
+						"source": "upper(case when (dri_mnemonic != '' and dri_mnemonic is not null) then dri_mnemonic else wefa_mnemonic end)", 
+						"type": "field", 
+						"target": "name"
+					},
+					{ "source": "date", "type": "field", "target": "date" },
+					{ "source": "value", "type": "field", "target": "value" }
+				]
+			},
+			"incremental": {
+				"active": "Y",
+				"filter": "and name in(select distinct name from {schemaName}.vw_magellan_attributes)"
+			}
+		},
+		{
+			"name": "geforecastgiif",
+			"execute": "N",
+			"sourceSchema": "eaa_stage",
+			"seriesAttributes": {
+				"view":{
+					"name": "vw_geforecast_giif_attributes",
+					"table": "geforecasthistory_giif_attributes",
+					"applyDistinct": "Y",
+					"filters": [
+						"mnemonic is not null"
+					]
+				},
+				"mapping": [
+					{ 
+						"source": "'GEFORECASTGIIF.' || upper(mnemonic)", 
+						"type": "field", 
+						"target": "name" 
+					},
+					{ "source": "name", "type": "field", "target": "label" },
+					{ 
+						"source": "replace(replace(longlabel, '\\n', '; '), '\\r', '; ')", 
+						"type": "field", 
+						"target": "description" 
+					},
+					{ "source": "GeforecastGiif", "type": "constant", "target": "source" },
+					{ "source": "Economic Series - Historical Forecast", "type": "constant", "target": "concept" },
+					{ 
+						"source": "upper(case frequencychar when 'a' then 'Y' else frequencychar end)", 
+						"type": "field", 
+						"target": "frequency" 
+					},
+					{ 
+						"source": "case when date_part_year(to_date(enddate, 'YYYY-MM-DD')) > (date_part_year(to_date(current_date, 'YYYY-MM-DD'))+1) then true else false end", 
+						"type": "field", 
+						"target": "forecast" 
+					},
+					{ "source": "to_date(startdate, 'YYYY-MM-DD')", "type": "field", "target": "startDate" },
+					{ "source": "to_date(enddate, 'YYYY-MM-DD')", "type": "field", "target": "endDate" },
+					{ "source": "to_date(updateddate, 'YYYY-MM-DD')", "type": "field", "target": "last_update_date" }
+				]
+			},
+			"seriesData": {
+				"transactions": ["insert", "update"],
+				"transactions_disabled": ["delete"],
+				"view":{
+					"name": "vw_geforecast_giif_data",
+					"table": "geforecasthistory_giif_data",
+					"filters": [
+						"value is not null and mnemonic is not null"
+					]
+				},
+				"mapping": [
+					{ 
+						"source": "'GEFORECASTGIIF.' || upper(mnemonic)", 
+						"type": "field", 
+						"target": "name" 
+					},
+					{ "source": "date", "type": "field", "target": "date" },
+					{ "source": "value", "type": "field", "target": "value" }
+				]
+			},
+			"incremental": {
+				"active": "Y",
+				"filter": "and name in(select distinct name from {schemaName}.vw_geforecast_giif_attributes)"
+			},
+			"preProcess": {
+				"routine": "PullGEForecastHistoryTables",
+				"config": {
+	                "name": "giif",
+	                "tables": [
+	                    {
+	                        "schemaName": "eaa_stage",
+	                        "srctable": "GEForecast_giif_attributes_working",
+	                        "table": "GEForecastHistory_giif_attributes",
+	                        "new": "Y",
+	                        "type": "attributes",
+	                        "versionField": "publisheddate",
+	                        "partition": {
+	                            "over": "mnemonic, frequencychar",
+	                            "order": "publisheddate"
+	                        },
+	                        "fields": [
+	                            {"name": "object_id", "type": "VARCHAR", "size": "30"},
+	                            {"name": "name", "type": "VARCHAR", "size": "100"},
+	                            {"name": "mnemonic", "type": "VARCHAR", "size": "100"},
+	                            {"name": "frequencyChar", "type": "VARCHAR", "size": "2"},
+	                            {"name": "geo", "type": "VARCHAR", "size": "20"},
+	                            {"name": "startDate", "type": "Date"},
+	                            {"name": "endDate", "type": "Date"},
+	                            {"name": "updatedDate", "type": "Date"},
+	                            {"name": "publishedDate", "type": "Date"},
+	                            {"name": "longLabel", "type": "VARCHAR", "size": "2000"},
+	                            {"name": "dataEdge", "type": "VARCHAR", "size": "100"}
+	                        ],
+	                        "sortkey":"name, publishedDate"
+	                    },
+	                    {
+	                        "schemaName": "eaa_stage",
+	                        "srctable": "GEForecast_giif_data_working",
+	                        "table": "GEForecastHistory_giif_data",
+	                        "new": "Y",
+	                        "type": "series",
+	                        "keyField": "object_id",
+	                        "fields": [
+	                            {"name": "mnemonic", "type": "VARCHAR", "size": "100"},
+	                            {"name": "date", "type": "DATE"},
+	                            {"name": "value", "type": "FLOAT4"}
+	                        ],
+	                        "sortkey":"mnemonic, date"
+	
+	                    }
+	                ]
+	            }
+			}
+		},
+		{
+			"name": "geforecastsrs",
+			"execute": "N",
+			"sourceSchema": "eaa_stage",
+			"seriesAttributes": {
+				"view":{
+					"name": "vw_geforecast_srs_attributes",
+					"table": "geforecasthistory_srs_attributes",
+					"applyDistinct": "Y",
+					"filters": [
+						"mnemonic is not null"
+					]
+				},
+				"mapping": [
+					{ 
+						"source": "'GEFORECASTSRS.' || upper(mnemonic)", 
+						"type": "field", 
+						"target": "name" 
+					},
+					{ "source": "name", "type": "field", "target": "label" },
+					{ 
+						"source": "replace(replace(longlabel, '\\n', '; '), '\\r', '; ')", 
+						"type": "field", 
+						"target": "description" 
+					},
+					{ "source": "GeforecastSrs", "type": "constant", "target": "source" },
+					{ "source": "Economic Series - Historical Forecast", "type": "constant", "target": "concept" },
+					{ 
+						"source": "upper(case frequencychar when 'a' then 'Y' else frequencychar end)", 
+						"type": "field", 
+						"target": "frequency" 
+					},
+					{ 
+						"source": "case when date_part_year(to_date(enddate, 'YYYY-MM-DD')) > (date_part_year(to_date(current_date, 'YYYY-MM-DD'))+1) then true else false end", 
+						"type": "field", 
+						"target": "forecast" 
+					},
+					{ "source": "to_date(startdate, 'YYYY-MM-DD')", "type": "field", "target": "startDate" },
+					{ "source": "to_date(enddate, 'YYYY-MM-DD')", "type": "field", "target": "endDate" },
+					{ "source": "to_date(updateddate, 'YYYY-MM-DD')", "type": "field", "target": "last_update_date" }
+				]
+			},
+			"seriesData": {
+				"transactions": ["insert", "update"],
+				"transactions_disabled": ["delete"],
+				"view":{
+					"name": "vw_geforecast_srs_data",
+					"table": "geforecasthistory_srs_data",
+					"filters": [
+						"value is not null and mnemonic is not null"
+					]
+				},
+				"mapping": [
+					{ 
+						"source": "'GEFORECASTSRS.' || upper(mnemonic)", 
+						"type": "field", 
+						"target": "name" 
+					},
+					{ "source": "date", "type": "field", "target": "date" },
+					{ "source": "value", "type": "field", "target": "value" }
+				]
+			},
+			"incremental": {
+				"active": "Y",
+				"filter": "and name in(select distinct name from {schemaName}.vw_geforecast_srs_attributes)"
+			},
+			"preProcess": {
+				"routine": "PullGEForecastHistoryTables",
+				"config": {
+	                "name": "srs",
+	                "tables": [
+	                    {
+	                        "schemaName": "eaa_stage",
+	                        "srctable": "GEForecast_srs_attributes_working",
+	                        "table": "GEForecastHistory_srs_attributes",
+	                        "new": "Y",
+	                        "type": "attributes",
+	                        "versionField": "publisheddate",
+	                        "partition": {
+	                            "over": "mnemonic, frequencychar",
+	                            "order": "publisheddate"
+	                        },
+	                        "fields": [
+	                            {"name": "object_id", "type": "VARCHAR", "size": "30"},
+	                            {"name": "name", "type": "VARCHAR", "size": "100"},
+	                            {"name": "mnemonic", "type": "VARCHAR", "size": "100"},
+	                            {"name": "frequencyChar", "type": "VARCHAR", "size": "2"},
+	                            {"name": "geo", "type": "VARCHAR", "size": "20"},
+	                            {"name": "startDate", "type": "Date"},
+	                            {"name": "endDate", "type": "Date"},
+	                            {"name": "updatedDate", "type": "Date"},
+	                            {"name": "publishedDate", "type": "Date"},
+	                            {"name": "longLabel", "type": "VARCHAR", "size": "2000"},
+	                            {"name": "dataEdge", "type": "VARCHAR", "size": "100"}
+	                        ],
+	                        "sortkey":"name, publishedDate"
+	                    },
+	                    {
+	                        "schemaName": "eaa_stage",
+	                        "srctable": "GEForecast_srs_data_working",
+	                        "table": "GEForecastHistory_srs_data",
+	                        "new": "Y",
+	                        "type": "series",
+	                        "keyField": "object_id",
+	                        "fields": [
+	                            {"name": "mnemonic", "type": "VARCHAR", "size": "100"},
+	                            {"name": "date", "type": "DATE"},
+	                            {"name": "value", "type": "FLOAT4"}
+	                        ],
+	                        "sortkey":"mnemonic, date"
+	
+	                    }
+	                ]
+	            }
+			}
+		},
+		{
+			"name": "geforecastwes",
+			"execute": "N",
+			"sourceSchema": "eaa_stage",
+			"seriesAttributes": {
+				"view":{
+					"name": "vw_geforecast_wes_attributes",
+					"table": "geforecasthistory_wes_attributes",
+					"applyDistinct": "Y",
+					"filters": [
+						"mnemonic is not null"
+					]
+				},
+				"mapping": [
+					{ 
+						"source": "'GEFORECASTWES.' || upper(mnemonic)", 
+						"type": "field", 
+						"target": "name" 
+					},
+					{ "source": "name", "type": "field", "target": "label" },
+					{ 
+						"source": "replace(replace(longlabel, '\\n', '; '), '\\r', '; ')", 
+						"type": "field", 
+						"target": "description" 
+					},
+					{ "source": "GeforecastWes", "type": "constant", "target": "source" },
+					{ "source": "Economic Series - Historical Forecast", "type": "constant", "target": "concept" },
+					{ 
+						"source": "upper(case frequencychar when 'a' then 'Y' else frequencychar end)", 
+						"type": "field", 
+						"target": "frequency" 
+					},
+					{ 
+						"source": "case when date_part_year(to_date(enddate, 'YYYY-MM-DD')) > (date_part_year(to_date(current_date, 'YYYY-MM-DD'))+1) then true else false end", 
+						"type": "field", 
+						"target": "forecast" 
+					},
+					{ "source": "to_date(startdate, 'YYYY-MM-DD')", "type": "field", "target": "startDate" },
+					{ "source": "to_date(enddate, 'YYYY-MM-DD')", "type": "field", "target": "endDate" },
+					{ "source": "to_date(updateddate, 'YYYY-MM-DD')", "type": "field", "target": "last_update_date" }
+				]
+			},
+			"seriesData": {
+				"transactions": ["insert", "update"],
+				"transactions_disabled": ["delete"],
+				"view":{
+					"name": "vw_geforecast_wes_data",
+					"table": "geforecasthistory_wes_data",
+					"filters": [
+						"value is not null and mnemonic is not null"
+					]
+				},
+				"mapping": [
+					{ 
+						"source": "'GEFORECASTWES.' || upper(mnemonic)", 
+						"type": "field", 
+						"target": "name" 
+					},
+					{ "source": "date", "type": "field", "target": "date" },
+					{ "source": "value", "type": "field", "target": "value" }
+				]
+			},
+			"incremental": {
+				"active": "Y",
+				"filter": "and name in(select distinct name from {schemaName}.vw_geforecast_wes_attributes)"
+			},
+			"preProcess": {
+				"routine": "PullGEForecastHistoryTables",
+				"config": {
+	                "name": "wes",
+	                "tables": [
+	                    {
+	                        "schemaName": "eaa_stage",
+	                        "srctable": "GEForecast_wes_attributes_working",
+	                        "table": "GEForecastHistory_wes_attributes",
+	                        "new": "Y",
+	                        "type": "attributes",
+	                        "versionField": "publisheddate",
+	                        "partition": {
+	                            "over": "mnemonic, frequencychar",
+	                            "order": "publisheddate"
+	                        },
+	                        "fields": [
+	                            {"name": "object_id", "type": "VARCHAR", "size": "30"},
+	                            {"name": "name", "type": "VARCHAR", "size": "100"},
+	                            {"name": "mnemonic", "type": "VARCHAR", "size": "100"},
+	                            {"name": "frequencyChar", "type": "VARCHAR", "size": "2"},
+	                            {"name": "geo", "type": "VARCHAR", "size": "20"},
+	                            {"name": "startDate", "type": "Date"},
+	                            {"name": "endDate", "type": "Date"},
+	                            {"name": "updatedDate", "type": "Date"},
+	                            {"name": "publishedDate", "type": "Date"},
+	                            {"name": "longLabel", "type": "VARCHAR", "size": "2000"},
+	                            {"name": "dataEdge", "type": "VARCHAR", "size": "100"}
+	                        ],
+	                        "sortkey":"name, publishedDate"
+	                    },
+	                    {
+	                        "schemaName": "eaa_stage",
+	                        "srctable": "GEForecast_wes_data_working",
+	                        "table": "GEForecastHistory_wes_data",
+	                        "new": "Y",
+	                        "type": "series",
+	                        "keyField": "object_id",
+	                        "fields": [
+	                            {"name": "mnemonic", "type": "VARCHAR", "size": "100"},
+	                            {"name": "date", "type": "DATE"},
+	                            {"name": "value", "type": "FLOAT4"}
+	                        ],
+	                        "sortkey":"mnemonic, date"
+	                    }
+	                ]
+	            }
+			}
+		}
+	]
+}

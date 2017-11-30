@@ -1,0 +1,21 @@
+{
+	"destinationSchema": "eaa_dev",
+	"sqlScript" : "CreateOPECTablesTemplate.sql",
+	"tableName" : "opec",
+	"bucketName" : "ihs-bda-data",
+	"cleanlocal" : "Y",
+	"srcCategories" : [
+        {
+        	"execute": "Y",
+            "srcCategory" : "calendar",
+            "srcFolder": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\OPEC",
+            "fileName": "OPEC_Calendar.xlsx",
+            "worksheetName": "OPEC",
+            "fileFormat" : "GZIP",
+            "skipRows": 0,
+            "skipFooter": 4,
+            "delimiter": ",",
+            "dateFormat" : "MONYYYY"
+        }
+	]
+}

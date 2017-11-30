@@ -1,0 +1,32 @@
+{
+	"destinationSchema": "pgcr_dev",
+	"tableName":"qf_",	
+	"sqlScript" : "SchemaCreationTemplate.sql",
+	"PostLoadScript":"PostLoadETL.sql",	
+	"bucketName" : "ihs-bda-data",
+	"s3SrcDirectory":"/projects/Pgcr_WindDashboard/Raw/19755_Quarterly Filings/",
+	"s3ToDirectory":{
+				"ident":"/projects/Pgcr_WindDashboard/Raw/QuarterlyFilings/ident_packed/",
+				"transactions":"/projects/Pgcr_WindDashboard/Raw/QuarterlyFilings/transactions_packed/",
+				"contracts":"/projects/Pgcr_WindDashboard/Raw/QuarterlyFilings/contracts_packed/",
+				"indexPub":"/projects/Pgcr_WindDashboard/Raw/QuarterlyFilings/indexPub_packed/"
+	},
+	"folderPath": {
+				"raw":"/raw/",
+				"ident":"/ident/",
+				"transactions":"/transactions/",
+				"contracts":"/contracts/",
+				"indexPub":"/indexPub/"
+	},
+	"columns": {
+				"contracts":["contract_unique_id", "seller_company_name", "seller_history_name", "customer_company_name", "contract_affiliate", "ferc_tariff_reference", "contract_service_agreement_id", "contract_execution_date", "commencement_date_of_contract_term", "contract_termination_date", "actual_termination_date", "extension_provision_description", "class_name", "term_name", "increment_name", "increment_peaking_name", "product_type_name", "product_name", "quantity", "units", "rate", "rate_minimum", "rate_maximum", "rate_description", "rate_units", "point_of_receipt_balancing_authority", "point_of_receipt_specific_location", "point_of_delivery_balancing_authority", "point_of_delivery_specific_location", "begin_date", "end_date"],
+				"transactions":["transaction_unique_id", "seller_company_name", "customer_company_name", "ferc_tariff_reference", "contract_service_agreement", "transaction_unique_identifier", "transaction_begin_date", "transaction_end_date", "trade_date", "exchange_brokerage_service", "type_of_rate", "time_zone", "point_of_delivery_balancing_authority", "point_of_delivery_specific_location", "class_name", "term_name", "increment_name", "increment_peaking_name", "product_name", "transaction_quantity", "price", "rate_units", "standardized_quantity", "standardized_price", "total_transmission_charge", "total_transaction_charge"],
+				"indexPub":["filer_unique_id", "seller_company_name", "index_price_publishers_to_which_sales_transactions_have_been_reported", "transactions_reported"],
+				"ident":["filer_unique_id", "company_name", "company_identifier", "contact_name", "contact_title", "contact_address", "contact_city", "contact_state", "contact_zip", "contact_country_name", "contact_phone", "contact_email", "transactions_reported_to_index_price_publishers", "filing_quarter"]
+	},	
+	"charsToBeReplaced":{"'":"`"},
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",	
+	"dateFormat":"YYYY-MM-DD",			
+	"input_file_type":"*.CSV"
+}

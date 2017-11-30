@@ -1,0 +1,21 @@
+{
+  "destinationSchema": "eaa_dev",
+  "sqlScript": "CreateOPISTablesTemplate.sql",
+  "tableName": "opis_",
+  "bucketName": "ihs-bda-data",
+  "delimiter": ",",
+  "fileFormat": " ",
+  "dateFormat": "MM/DD/YYYY",
+  "s3SrcDirectory": "projects/Enrg_ExecutiveAffairsAuthority/OPIS",
+  "cleanlocal" : "Y",  
+  "srcFileParameters": [
+    {
+      "s3Filename": "IHS_Weekly_Retail_Price_File_20170202.csv",
+      "redshiftTableSuffix": "retail_price"
+    },
+    {
+      "s3Filename": "IHS_Weekly_Retail_Volume_File_20170202.csv",
+      "redshiftTableSuffix": "retail_volume"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+	"name": "ENP_Monthly",
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",
+	"dateFormat" : "auto",
+    "cleanlocal" : "N",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" }    
+    ],
+	"common": {
+		"svc_act" : "api.aa.eea",
+		"per_svc_act" : "thomas.coffey",
+		"apikey" : "K58l2UR5RCrTVUBeEOrftQpTNl9qJSyVhnSTBLiYYFoGw1uxyt",
+		"per_apikey" : "A0C1LYBsgFcdfxJ5G1oUcUDrP85LfLNJtUKeUFdNLCnsf0KdfZ",
+		"supplypath": "IHS\\EI\\MIS\\Supply\\Crude\\Production\\World",
+		"maxpoint" :10000000000,
+		"startdate":{
+			"month": 1,
+			"day" : 1,
+			"year": 1990
+		}
+	},
+    "tables": [
+		{
+    		"schemaName": "energy_prod",
+            "table": "enp_monthly",
+            "new": "Y",
+            "fields": [
+                { "name": "category", "type": "VARCHAR", "size": "100" },
+                { "name": "frequency", "type": "VARCHAR", "size": "1" },
+                { "name": "description", "type": "VARCHAR", "size": "255" },
+                { "name": "source", "type": "VARCHAR", "size": "255" },
+                { "name": "unit", "type": "VARCHAR", "size": "20" },
+                { "name": "valuationdate", "type": "DATE" },
+                { "name": "Value", "type": "FLOAT4" }
+            ]                
+        }                
+    ]
+}

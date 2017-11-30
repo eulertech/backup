@@ -1,0 +1,80 @@
+{
+	"name" : "ECRConnectAthenaSpark",
+	"bucketName" : "ihs-bda-data",
+	"cleanlocal" : "Y",
+	"common": {
+		"name": "Risks",
+		"baseurl": "https://connectapi.ihs.com",
+		"username": "abudhabieaaapi",
+		"password": "U8dt4681",
+		"riskService": "/risk/v2/country-risk/ratings"
+	},
+    "fileFormat" : "GZIP",
+    "delimiter": ",",
+    "dateFormat" : "auto",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "raw", "folder": "raw", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" }        
+    ],
+    "catalogs": [
+    	{
+    		"name": "xReferences",
+    		"tables": [
+				{
+					"table": "class_xref",
+					"s3SourceFolder": "/projects/Enrg_ExecutiveAffairsAuthority/ECRConnect/",
+					"sourceFileName": "ecr_risks_classification.csv",
+					"fields": [
+				        { "name": "class_name", "type": "VARCHAR", "size": "50" },
+				        { "name": "risk_name", "type": "VARCHAR", "size": "50" },
+				        { "name": "risk_desc", "type": "VARCHAR", "size": "50" }
+				    ]
+				},
+				{
+					"table": "iso3166_xref",
+					"s3SourceFolder": "/projects/Enrg_ExecutiveAffairsAuthority/ECRConnect/",
+					"sourceFileName": "tbliso3166.csv",
+					"fields": [
+				        { "name": "countryname", "type": "VARCHAR", "size": "50" },
+				        { "name": "iso3166", "type": "VARCHAR", "size": "2" }
+				    ]
+				}
+			]
+    	},
+    	{
+    		"name": "Risks",
+    		"execute": "Y",
+    		"tables": [
+				{
+					"schemaName": "ecr_prod",
+					"table": "ecr_risks",
+					"type": "current",
+					"new": "Y",
+					"fields": [
+				        { "name": "country", "type": "VARCHAR", "size": "50" },
+				        { "name": "risk_name", "type": "VARCHAR", "size": "50" },
+				        { "name": "risk_value", "type": "FLOAT4" },
+				        { "name": "risk_description", "type": "VARCHAR", "size": "250" },
+				        { "name": "risk_class", "type": "VARCHAR", "size": "50" },
+				        { "name": "risk_class_avg", "type": "FLOAT4" },
+				        { "name": "updated_on", "type": "DATE" }
+				    ]
+				},
+				{
+					"schemaName": "ecr_prod",
+					"table": "ecr_risks_history",
+					"type": "history",
+					"new": "Y",
+					"fields": [
+				        { "name": "country", "type": "VARCHAR", "size": "50" },
+				        { "name": "risk_name", "type": "VARCHAR", "size": "50" },
+				        { "name": "risk_value", "type": "FLOAT4" },
+				        { "name": "updated_on", "type": "DATE" }
+				    ]
+				}
+			]
+    	}
+    ]
+}

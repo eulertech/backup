@@ -1,0 +1,135 @@
+{
+	"destinationSchema": "eaa_stage",
+	"sqlScript" : "CreateLiquidsBalanceTablesTemplate.sql",
+	"tempTablesScript": "CreateTempTablesTemplate.sql",
+	"cleanTempTablesScript": "CleanTempTablesTemplate.sql",
+	"unpivotScript": "UnpivotData.sql",
+	"tableName" : "LiquidsBalance",
+	"bucketName" : "ihs-bda-data",
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+	"inputFilePrefix" : "WOW_LiquidsBalance_",
+	"inputFileExt": "xlsb",
+	"sharedSrcFolder": "\\\\hou0\\vol3\\ZLSD\\Common\\Multiclt\\CRDPROD\\WOW\\",
+	"s3SrcDirectory": "projects/Enrg_ExecutiveAffairsAuthority/LiquidsBalance",
+	"eaa_admin_services_url": "http://localhost:52710/api",
+	"sheetsOutputFormat": "csv",
+	"sheetsToExtract": [
+		{
+			"name": "Crude", 
+			"outputName": "crude_total", 
+			"tempTableName": "liquidsbalance_crude_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17,
+			"colsRanges": [
+				{"from": 1, "to": 63}
+			]
+		},
+		{
+			"name": "Crude", 
+			"outputName": "crude_asw2016", 
+			"tempTableName": "liquidsbalance_asw2016_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17,
+			"colsRanges": [
+				{"from": 1, "to": 2}, 
+				{"from": 64, "to": 92}
+			]
+		},
+		{
+			"name": "Crude", 
+			"outputName": "crude_rivalry2016", 
+			"tempTableName": "liquidsbalance_rivalry2016_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17,
+			"colsRanges": [
+				{"from": 1, "to": 2}, 
+				{"from": 93, "to": 121}
+			]
+		},
+		{
+			"name": "Crude", 
+			"outputName": "crude_onshore", 
+			"tempTableName": "liquidsbalance_onshore_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17, 
+			"colsRanges": [
+				{"from": 1, "to": 2}, 
+				{"from": 123, "to": 159}
+			]
+		},
+		{
+			"name": "Crude", 
+			"outputName": "crude_offshore", 
+			"tempTableName": "liquidsbalance_offshore_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17, 
+			"colsRanges": [
+				{"from": 1, "to": 2}, 
+				{"from": 160, "to": 196}
+			]
+		},
+		{
+			"name": "Crude", 
+			"outputName": "crude_shallowwater", 
+			"tempTableName": "liquidsbalance_shallowwater_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17, 
+			"colsRanges": [
+				{"from": 1, "to": 2}, 
+				{"from": 197, "to": 233}
+			]
+		},
+		{
+			"name": "Crude", 
+			"outputName": "crude_deepwater", 
+			"tempTableName": "liquidsbalance_deepwater_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17, 			
+			"colsRanges": [
+				{"from": 1, "to": 2}, 
+				{"from": 234, "to": 270}
+			]
+		},
+		{
+			"name": "Crude", 
+			"outputName": "crude_ultradeepwater", 
+			"tempTableName": "liquidsbalance_ultradeepwater_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 17, 		
+			"colsRanges": [
+				{"from": 1, "to": 2}, 
+				{"from": 271, "to": 307}
+			]
+		},
+		{
+			"name": "TightOil", 
+			"outputName": "tightoil", 
+			"tempTableName": "liquidsbalance_tightoil_temp",
+			"delimiter": ",", 
+			"rowHeader": 1, 
+			"skipTopRows": 2, 
+			"skipBottomRows": 16,
+			"colsRanges": [
+				{"from": 1, "to": 63}
+			]
+		}
+	]
+}

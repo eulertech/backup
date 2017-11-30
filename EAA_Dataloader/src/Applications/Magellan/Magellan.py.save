@@ -1,0 +1,267 @@
+'''
+Created on Mar 21, 2017
+@author: VIU53188
+@summary: This application will pull Magellan data from the MarkLogic system AKA ODATA
+    Below are the steps
+    3)  pull data
+    4)  Create csv file from content
+    5)  Create Magellan Table
+    6)  Load CSV data into RedShift
+    7)  zip and then store on S3 server
+'''
+import os
+import json
+import csv
+import re
+from threading import Thread
+
+import psycopg2
+import requests
+
+from AACloudTools.RedshiftUtilities import RedshiftUtilities
+from AACloudTools.FileUtilities import FileUtilities
+from Applications.Common.ApplicationBase import ApplicationBase
+
+class Magellan(ApplicationBase):
+    '''
+    This application will pull Magellan data from the MarkLogic system AKA ODATA
+    '''
+    outputHolding = []
+    def AsyncBuildTables(self, proc):
+        '''
+        Builds the tables from dynamic SQL but does so asynchronously
+        '''
+        try:
+            ###
+            ##  first create the file so we can use it
+            ###
+            self.logger.info(self.moduleName + " - " + proc["name"] +  " - SQL tables started.")
+            sqlTableCreationScript = ApplicationBase.BuildTableCreationScriptTable(self, proc["sqlscript"], proc["name"])
+            ###
+            #  now we create the table from the file created
+            ###
+            RedshiftUtilities.PSqlExecute(sqlTableCreationScript, self.logger)
+            self.logger.info(self.moduleName + " - " + proc["name"] +  " - SQL tables created.")
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in asyncBuildCXR")
+            raise
+
+    def BuildTables(self):
+        '''
+        parent routine to set up threads to build tables if needed
+        This is done so that we can have different types of tables being created at the same time
+        '''
+        try:
+            processTableArray = []
+            for proc in self.job["ODATA"]["Catalogs"]:
+                if proc["execute"] == "Y":
+                    processTableArray.append(proc)
+            runs = []
+            for proc in processTableArray:
+                runs.append(Thread(target=self.AsyncBuildTables, args=(proc,)))
+
+            [r.start() for r in runs] # pylint: disable=expression-not-assigned
+            [r.join() for r in runs] # pylint: disable=expression-not-assigned
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in BuildTables ")
+            raise
+
+    def GetRecordCount(self, proc):
+        '''
+        Find out how many records are stored in the set
+        '''
+        retVal = 0
+        try:
+            self.logger.info(self.moduleName + " - started GetRecordCount - " + proc["name"])
+            ###
+            #  create url to use to get a count of the complete set of data
+            ###
+            url = proc["endpoint"] + proc["name"]  + '/$count'
+            req = requests.get(url)
+            if req.status_code == 200:
+                retVal = req.text
+
+            self.logger.info(self.moduleName + " - finished GetRecordCount -  " + proc["name"])
+
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in GetRecordCount - " + proc["name"])
+            raise
+        return retVal
+
+    def CheckValue(self, inRec, inItem):
+        '''
+        Helper method so that we remove cr lf if they are in the string
+        '''
+        try:
+            if inItem in inRec:
+                val = re.sub(r"\r\n", " ", inRec[inItem])
+                val = re.sub(r'\n', ' ', val)
+                return unicode(val).encode("utf-8")
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in CheckValue - " + inItem)
+            raise
+
+    def AsyncPullOdataObjMt(self, proc):
+        '''
+        The method to actually pull the data from odata
+        '''
+        try:
+            self.logger.info(self.moduleName + "- starting AsyncPullOdataObjMt- " + proc["skip"])
+###
+#  now we are going to start calling the ODATA to pull records 50 recs at a time
+###
+            url = proc["baseurl"] + proc["skip"]
+            ndx = 0
+            req = requests.get(url)
+            if req.status_code == 200:
+                data = json.loads(req.text)
+                for rec in data["value"]:
+                    outRecArray = []
+                    for fld in proc["fields"]:
+                        outRecArray.append(self.CheckValue(rec, fld["name"]))
+                    ndx = ndx + 1
+                    self.outputHolding.append(outRecArray)
+            else:
+                self.logger.exception(self.moduleName + "- completed AsyncPullOdataObjMt- " + proc["skip"] + " Error =  " + str(req.status_code))
+
+            self.logger.info(self.moduleName + "- completed AsyncPullOdataObjMt- " + proc["skip"] + " processed " + str(ndx))
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in AsyncPullOdataObjMt - "+ proc["skip"])
+            raise
+    def PullOdataObjMt(self, proc):
+        '''
+        Sets up the calls so that can start the multi threading
+        '''
+        try:
+            self.logger.info(self.moduleName + "- starting PullOdataObjMt")
+            ###
+            #  first get the total number of expected records
+            ###
+            recordsperpull = 50
+            expectedRecs = int(self.GetRecordCount(proc))
+            self.logger.info(self.moduleName + "- Expected Records - " + str(expectedRecs))
+            numIterations = expectedRecs / recordsperpull
+            numIterations = 100/ recordsperpull
+            urlBase = proc["endpoint"] + proc["name"] + '?$top=50&$skip='
+
+            processTableArray = []
+            for ndx in range(0, numIterations):
+                skiprecs = ndx * recordsperpull
+                passparms = {"baseurl": urlBase, "name": proc["name"], "fields": proc["fields"], "skip": str(skiprecs)}
+                processTableArray.append(passparms)
+
+            runs = []
+            for prc in processTableArray:
+                runs.append(Thread(target=self.AsyncPullOdataObjMt, args=(prc,)))
+
+            [r.start() for r in runs] # pylint: disable=expression-not-assigned
+            [r.join() for r in runs] # pylint: disable=expression-not-assigned
+
+            self.logger.info(self.moduleName + "- completed PullOdataObjMt")
+            self.CreateCSV(proc["name"])
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in PullOdataObjMt")
+            raise
+
+    def PullODATA(self):
+        '''
+        gets a list of the type of data that we are going to pull and the fields for each
+        '''
+        try:
+            self.logger.info(self.moduleName + "- started PullODATA ")
+            processTableArray = []
+            endpoint = self.job["ODATA"]["endpoint"]
+            for proc in self.job["ODATA"]["Catalogs"]:
+                if proc["execute"] == "Y":
+                    passparms = {"endpoint": endpoint, "name": proc["name"], "fields": proc["fields"]}
+                    processTableArray.append(passparms)
+            runs = []
+            for proc in processTableArray:
+                runs.append(Thread(target=self.PullOdataObjMt, args=(proc,)))
+
+            [r.start() for r in runs] # pylint: disable=expression-not-assigned
+            [r.join() for r in runs] # pylint: disable=expression-not-assigned
+            self.logger.info(self.moduleName + "- completed PullODATA ")
+
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in PullODATA")
+            raise
+
+    def CreateCSV(self, inName):
+        '''
+        Creates a csv file in the temp folder from the array holding the data
+        '''
+        try:
+            self.logger.info(self.moduleName + "- started CreateCSV ")
+
+            inOutputFileName = self.localTempDirectory + '/' + inName + ".csv"
+            csvfile = open(inOutputFileName, 'wb')
+            csvWriter = csv.writer(csvfile)
+            for oArray in self.outputHolding:
+                csvWriter.writerow(oArray)
+            csvfile.close()
+            self.logger.info(self.moduleName + "- completed CreateCSV ")
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in CreateCSV")
+            raise
+
+    def AsyncLoadFilesToRedShift(self, proc):
+        '''
+        actual method to push data into redshift
+        '''
+        try:
+            rsConnect = psycopg2.connect(dbname=self.awsParams.redshift['Database'],
+                                         host=self.awsParams.redshift['Hostname'],
+                                         port=self.awsParams.redshift['Port'],
+                                         user=self.awsParams.redshiftCredential['Username'],
+                                         password=self.awsParams.redshiftCredential['Password'])
+            self.fileUtilities = FileUtilities(self.logger)
+
+            inOutputFileName = self.localTempDirectory + '/' + proc["name"] + ".csv"
+            rsTable = proc["name"]
+
+            RedshiftUtilities.LoadFileIntoRedshift(rsConnect,
+                                                   self.awsParams.s3,
+                                                   self.logger, self.fileUtilities, inOutputFileName,
+                                                   self.job["destinationSchema"], rsTable,
+                                                   self.job["fileFormat"], self.job["dateFormat"],
+                                                   self.job["delimiter"])
+            rsConnect.close()
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in AsyncLoadFilesToRedShift ")
+            raise
+
+    def LoadFilesToRedShift(self):
+        '''
+        method to set up for multi threading pushing data into redshift
+        '''
+        try:
+            processTableArray = []
+            for proc in self.job["ODATA"]["Catalogs"]:
+                if proc["execute"] == "Y":
+                    processTableArray.append(proc)
+            runs = []
+            for proc in processTableArray:
+                runs.append(Thread(target=self.AsyncLoadFilesToRedShift, args=(proc,)))
+
+            [r.start() for r in runs] # pylint: disable=expression-not-assigned
+            [r.join() for r in runs] # pylint: disable=expression-not-assigned
+        except:
+            self.logger.exception(self.moduleName + "- we had an error in loadFilesToRedShift ")
+            raise
+
+    def Start(self, logger, moduleName, filelocs):
+        '''
+        Main routine that starts it all
+        '''
+        try:
+            self.location = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
+            ApplicationBase.Start(self, logger, moduleName, filelocs)
+            self.BuildTables()
+            self.PullODATA()
+            self.LoadFilesToRedShift()
+
+        except:
+            self.logger.exception(moduleName + " - Exception!")
+            raise

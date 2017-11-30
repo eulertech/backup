@@ -1,0 +1,55 @@
+{
+    "outputLocations": {
+        "workingFolder": "/fastdisk/EAA_Dataloader",
+        "locationSuffix": "_Data",
+        "relativeLoggingFolder": "log",
+        "relativeOutputfolder": "output",
+        "relativeInputfolder": "input"
+    },
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "data", "folder": "csv/data", "new": "Y" },
+        { "name": "attribute", "folder": "csv/attribute", "new": "Y" },
+        { "name": "zips", "folder": "zips", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" }
+    ],
+    "bucketName": "ihs-bda-data",
+    "fileFormat": "GZIP",
+    "delimiter": ",",
+    "dateFormat": "auto",
+    "s3DataFolder": "/magellan",
+    "s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/Magellan/full",
+    "destinationSchema": "eaa_dev",
+    "tables": [{
+            "name": "magellan_attributes",
+            "type": "attributes",
+            "fields": [
+                { "name": "source_id", "type": "VARCHAR", "size": "20" },
+                { "name": "dri_mnemonic", "type": "VARCHAR", "size": "100" },
+                { "name": "start_date", "type": "VARCHAR", "size": "10" },
+                { "name": "end_date", "type": "VARCHAR", "size": "10" },
+                { "name": "base_period_value", "type": "VARCHAR", "size": "20" },
+                { "name": "short_label", "type": "VARCHAR", "size": "1000" },
+                { "name": "long_label", "type": "VARCHAR", "size": "2000" },
+                { "name": "explorer_label", "type": "VARCHAR", "size": "1300" },
+                { "name": "last_update_date", "type": "VARCHAR", "size": "10" },
+                { "name": "document_type", "type": "VARCHAR", "size": "20" },
+                { "name": "wefa_mnemonic", "type": "VARCHAR", "size": "20" }
+            ],
+            "sortkey":"source_id",
+    		"distkey":"source_id"          
+        },
+        {
+            "name": "magellan_data",
+            "type": "series",
+            "fields": [
+                { "name": "source_id", "type": "VARCHAR", "size": "20" },
+                { "name": "date", "type": "DATE" },
+                { "name": "value", "type": "FLOAT4" }
+            ],
+    		"sortkey":"source_id, date",                    
+    		"distkey":"source_id"          
+        }
+    ]
+}

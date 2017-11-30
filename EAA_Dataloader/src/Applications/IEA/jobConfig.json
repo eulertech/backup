@@ -1,0 +1,252 @@
+{
+	"destinationSchema": "eaa_stage",
+	"bucketName" : "ihs-bda-data",
+	"fileFormat" : "GZIP",
+	"delimiter" : ",",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",		
+	"s3SrcDirectory": "projects/Enrg_ExecutiveAffairsAuthority/IEA",
+	"cleanlocal" : "N",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "data", "folder": "data", "new": "Y" },
+        { "name": "scrubbed", "folder": "scrubbed", "new": "Y" },      
+        { "name": "zips", "folder": "zips", "new": "Y" }        
+    ],	
+  	"MODSWebsite":{
+  		"username": "modscera",
+  		"pass": "P5qPA6",
+  		"SupplyDemandBalanceStocks": "http://mods.iea.org/sdbs/sdbstxt.zip",
+  		"SupplyDemandBalanceStocksHistory": "http://mods.iea.org/sdbs/hsdbstxt.zip",
+  		"FieldByField": "http://mods.iea.org/field/detail.zip"
+  	},
+  	"CrossReference":{
+  		"basesql": "CreateCrossreferenceTableTemplate.sql",
+  		"Categories": [
+  			{
+  				"name": "CRX_IEACountry",
+  				"execute": "Y",
+  				"sourcetables":[
+  					{"name": "working_IEA_FieldByField"},
+  					{"name": "working_IEA_Supply"},
+  					{"name": "working_IEA_BalancesCrude"},
+  					{"name": "working_IEA_BalancesProduct"},
+  					{"name": "working_IEA_DemandOECDDE"},
+  					{"name": "working_IEA_DemandNOECDDE"},
+  					{"name": "working_IEA_Stocks"},
+  					{"name": "working_IEA_WorldOilSupplyDemand"}
+  				],
+  				"sourcefield": "country"
+   			},
+  			{
+  				"name": "CRX_IEAProduct",
+  				"execute": "Y",
+  				"sourcetables":[
+  					{"name": "working_IEA_Supply"},
+  					{"name": "working_IEA_BalancesCrude"},
+  					{"name": "working_IEA_BalancesProduct"},
+  					{"name": "working_IEA_DemandOECDDE"},
+  					{"name": "working_IEA_Stocks"}
+  				],
+  				"sourcefield": "product"
+  			},
+  			{
+  				"name": "CRX_IEABalance",
+  				"execute": "Y",
+  				"sourcetables":[
+  					{"name": "working_IEA_BalancesCrude"},
+  					{"name": "working_IEA_BalancesProduct"}
+  				],
+   				"sourcefield": "balance"
+  			},
+  			{
+  				"name": "CRX_IEAFlow",
+  				"execute": "Y",
+  				"sourcetables":[
+  					{"name": "working_IEA_Stocks"}
+  				],
+   				"sourcefield": "flow"
+  			}
+  		]
+  	}, 
+  	"FileSets":[
+		{
+			"execute": "Y",
+			"processname": "IEA_FieldByField",
+			"processfile": ["detail/FIELDBY.TXT"],
+			"sqlscript" : "CreateIEAFieldByTableTemplate.sql",
+			"fields":[
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{"name":"period_type"},
+				{"name":"period"},
+				{"name": "value"}
+			]
+		},
+		{
+			"execute": "Y",
+			"processname": "IEA_Supply",
+			"processfile": ["sdbstxt/SUPPLY.TXT", "hsdbstxt/HSUPPLY.TXT"],
+			"sqlscript" : "CreateIEASupplyTableTemplate.sql",
+			"fields":[
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{
+					"name": "product",
+					"CXRTable": "CRX_IEAProduct",
+					"set":"p"
+				},
+				{"name":"period_type"},
+				{"name":"period"},
+				{"name": "value"}
+			]
+		},		
+		{
+			"execute": "Y",
+			"processname": "IEA_BalancesCrude",
+			"processfile": ["sdbstxt/CRUDEDAT.TXT", "hsdbstxt/CRUDEDAT.TXT"],
+			"sqlscript" : "CreateIEABalancesCrudeTableTemplate.sql",
+			"fields":[
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{
+					"name": "product",
+					"CXRTable": "CRX_IEAProduct",
+					"set":"p"
+				},
+				{
+					"name": "balance",
+					"CXRTable": "CRX_IEABalance",
+					"set":"b"
+				},
+				{"name":"period_type"},
+				{"name":"period"},
+				{"name": "value"}
+			]
+		},
+		{
+			"execute": "Y",
+			"processname": "IEA_BalancesProduct",
+			"processfile": ["sdbstxt/PRODDAT.TXT", "hsdbstxt/PRODDAT.TXT"],
+			"sqlscript" : "CreateIEABalancesProductTableTemplate.sql",
+			"fields":[
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{
+					"name": "product",
+					"CXRTable": "CRX_IEAProduct",
+					"set":"p"
+				},
+				{
+					"name": "balance",
+					"CXRTable": "CRX_IEABalance",
+					"set":"b"
+				},
+				{"name":"period_type"},
+				{"name":"period"},
+				{"name": "value"}
+			]
+		},
+		{
+			"execute": "Y",
+			"processname": "IEA_DemandOECDDE",
+			"processfile": ["sdbstxt/OECDDE.TXT", "hsdbstxt/HOECDDE.TXT"],
+			"sqlscript" : "CreateIEADemandOECDDETableTemplate.sql",
+			"fields":[
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{
+					"name": "product",
+					"CXRTable": "CRX_IEAProduct",
+					"set":"p"
+				},
+				{"name":"period_type"},
+				{"name":"period"},
+				{"name": "value"}
+			]
+		},
+		{
+			"execute": "Y",
+			"processname": "IEA_DemandNOECDDE",
+			"processfile": ["sdbstxt/NOECDDE.TXT", "hsdbstxt/HNOECDDE.TXT"],
+			"sqlscript": "CreateIEADemandNOECDDETableTemplate.sql",
+			"pandas_replace": {
+				"na_values": "..",
+				"processfile": "hsdbstxt/HNOECDDE.TXT",
+				"columnNames": ["c0", "c1", "c2", "c3", "c4", "c5", "c6"],
+				"usecolumnNames": ["c0", "c2", "c3"]
+			},
+			"fields":[
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{"name":"period_type"},
+				{"name":"period"},
+				{"name": "value"}
+			]
+		},
+		{
+			"execute": "Y",
+			"processname": "IEA_Stocks",
+			"processfile": ["sdbstxt/STOCKDAT.TXT", "hsdbstxt/STOCKDAT.TXT"],
+			"sqlscript" : "CreateIEAStocksTableTemplate.sql",
+			"fields":[
+				{
+					"name": "flow",
+					"CXRTable": "CRX_IEAFlow",
+					"set":"f"
+					},
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{
+					"name": "product",
+					"CXRTable": "CRX_IEAProduct",
+					"set":"p"
+				},
+				{"name":"period_type"},
+				{
+					"name":"period", 
+					"replace": {"oldValue": "NEW", "newValue": ""}
+				},
+				{"name": "value"}
+			],
+			"filterFromWorking": "period not like '%OLD%'"
+		},
+		{
+			"execute": "Y",
+			"processname": "IEA_WorldOilSupplyDemand",
+			"processfile": ["sdbstxt/SUMMARY.TXT"],
+			"sqlscript" : "CreateIEASummaryTableTemplate.sql",
+			"fields":[
+				{
+					"name": "country",
+					"CXRTable": "CRX_IEACountry",
+					"set":"c"
+				},
+				{"name": "final"},
+				{"name":"period_type"},
+				{"name":"period"},
+				{"name": "value"}
+			]
+		}
+  	]
+}

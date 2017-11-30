@@ -1,0 +1,42 @@
+{  
+	"QCFolder":"/QC/",
+	"delimiter":"|",
+	"rowcount_mismatch_threshold_percent":50,
+	"S3Bucket":"s3://ihs-temp/varun/",
+	"SQLServer":{  
+		"bcpUtilityDirOnLinux":"/opt/mssql-tools/bin/",
+      	"sqlServerloginInfo":"-S 10.45.88.171 -U maritime -P trial,123",
+      	"ConnectionInfo":"DSN=Cloud SQL Server;Uid=tugboat;Pwd=trial,246;"
+	},
+	"Redshift":{  
+		"ConnectionInfo":{  
+			"dbname":"lake_one",
+         	"user":"varunm",
+         	"pwd":"3Hat2Pen",
+         	"host":"ihs-lake-doppler.cop6dfpxh7ta.us-west-2.redshift.amazonaws.com",
+         	"port":"5439"
+		},
+		"tables":{
+         	"post":"hindsight_etl.stg_series_data_cleaned"
+      	}
+	},      	
+	"RowCounts":{  
+		"SQLServer":{  
+			"InputQuery":"SQL/sql_server_rowcounts_seriesid.sql",
+			"OutputFile":"sql_server_rowcounts_seriesid.csv",
+			"Columns":"series_id,series_row_cnt,Date,timestamp"			
+		},
+		"Redshift":{  
+			"InputQuery":"SQL/redshift_rowcounts_seriesid.sql",			
+            "OutputFile":"redshift_rowcounts_seriesid.csv"         	
+      	},
+      	"Comparison":{
+      		"InterVersion":{
+      			"InputQuery":"SQL/mismatch_from_prior_version.sql"      		
+      		},
+      		"InterSystem":{      			
+      			"OutputFile":"mismatches.csv"
+      		}
+   		}
+   	}
+}

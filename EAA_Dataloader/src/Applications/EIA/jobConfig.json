@@ -1,0 +1,27 @@
+{
+	"destinationSchema": "eaa_stage",
+	"tableName" : "eia_",
+	"bucketName" : "ihs-bda-data",
+	"sqlScriptPrefix" : "CreateEIATablesTemplate_",
+	"urlPrefix" : "http://api.eia.gov/bulk/",
+	"urlExt" : "zip",
+	"srcFileNamesNoExt" : [
+		{
+			"name": "STEO",
+			"attrs": ["series_id", "name", "units", "f", "copyright", "source", "geography", "start", "end", "lastHistoricalPeriod", "last_updated", "description"]
+		},
+		{
+			"name": "PET_IMPORTS",
+			"attrs": ["series_id", "name", "units", "f", "copyright", "source", "lat", "lon", "geography", "geography2", "start", "end", "last_updated", "geoset_id", "latlon"]
+		},
+		{
+			"name": "PET",
+			"attrs": ["series_id", "name", "units", "f", "unitsshort", "description", "copyright", "source", "geography", "start", "end", "last_updated", "iso3166", "geography2"]
+		}
+	],
+	"delimiter" : "|",
+	"fileFormat" : "GZIP",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+	"rProgram" : "Rscript",
+  	"cleanlocal" : "Y"  	
+}

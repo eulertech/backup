@@ -1,0 +1,13 @@
+{
+	"destinationSchema": "pgcr_dev",
+	"tableName":"kml_",	
+	"sqlScript" : "CreatePGCRKMLDataTablesTemplate.sql",
+	"bucketName" : "ihs-bda-data",
+	"s3SrcDirectory":"/projects/Pgcr_WindDashboard/KML/",
+	"RegexExpr":"<strong>.*Settlement Point:</strong><br>(.+)<br><strong>Price:&nbsp;&nbsp;</strong>.*<strong>Plant Name:</strong><br>(.+)<br><br><strong>Plant Address:</strong> <br>(.+)<br><br><strong>County:&nbsp;&nbsp;</strong>(.+)<br><strong>Water Source:&nbsp;&nbsp;</strong>.*<strong>Utility:&nbsp;&nbsp;</strong>(.+?)<br><br>\\-{2,}.*<br><br>",
+	"s3ToDirectory":"/projects/Pgcr_WindDashboard/KML_packed/",
+	"delimiter" : "|",
+	"fileFormat" : "GZIP",	
+	"dateFormat":"YYYY-MM-DD"		
+}
+

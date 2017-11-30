@@ -1,0 +1,37 @@
+{
+  	"bucketName": "ihs-bda-data",
+  	"delimiter": ",",
+	"fileFormat" : "GZIP",
+  	"dateFormat": "auto",
+  	"s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/HistoricalBrent",
+	"srcSharedFolder": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\MarkitBrentCurves",  	
+  	"cleanlocal" : "Y",  
+	"folders": [
+    	{ "name": "sql", "folder": "sql", "new": "Y" },
+    	{ "name": "csv", "folder": "csv", "new": "Y" },
+    	{ "name": "raw", "folder": "raw", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" },      	
+    	{ "name": "parquet", "folder": "parquet", "new": "Y" }
+	],  	
+   "tables": [{
+    		"schemaName": "eaa_dev",
+            "table": "HistoricalBrent",
+            "srcfile": "BrentCrude2000-2009.zip",
+            "header": 1,
+            "new": "Y",
+            "fields": [
+                { "name": "instrument_id", "type": "VARCHAR", "size": "15" },
+                { "name": "symbol_description", "type": "VARCHAR", "size": "200" },
+                { "name": "expiration_date", "type": "DATE" },
+                { "name": "trade_datetime", "type": "DATE" },
+                { "name": "openvalue", "type": "REAL" },
+                { "name": "highvalue", "type": "REAL" },
+                { "name": "lowvalue", "type": "REAL" },
+                { "name": "closevalue", "type": "REAL" },
+                { "name": "volume", "type": "INTEGER" },
+                { "name": "open_interest", "type": "INTEGER" }
+            ],
+            "sortkey":"instrument_id"
+        }        
+    ]
+}

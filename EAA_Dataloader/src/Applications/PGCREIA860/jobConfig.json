@@ -1,0 +1,203 @@
+{
+  "destinationSchema": "pgcr_dev",
+  "sqlScript": "CreateEIA860TablesTemplate.sql",
+  "PostLoadScript":["PostLoadETL.sql","Views.sql"],
+  "tableName": "Eia860_",
+  "bucketName": "ihs-bda-data",
+  "delimiter": ",",
+  "fileFormat": "GZIP",
+  "dateFormat": "YYYY-MM-DD",
+  "s3SrcDirectory": [
+  					"projects/Pgcr_WindDashboard/Raw/EIA860/Yearly", 
+  					"projects/Pgcr_WindDashboard/Raw/EIA860/Monthly"
+	],
+  "redshiftTables": ["Utility","Plant"],
+  "ExcelSheets": [
+ 	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*Utility*",
+	  	"Sheet": "Utility",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "1_Utility"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*Plant*",
+	  	"Sheet": "Plant",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "2_Plant"
+	  },
+ 	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_1_Generator*",
+	  	"Sheet": "Operable",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_1_GeneratorOperable"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_1_Generator*",
+	  	"Sheet": "Proposed",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_1_GeneratorProposed"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_1_Generator*",
+	  	"Sheet": "Retired and Canceled",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_1_GeneratorRetCancelled"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_2_Wind*",
+	  	"Sheet": "Operable",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_2_WindOperable"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_2_Wind*",
+	  	"Sheet": "Retired and Canceled",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_2_WindRetCancelled"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_3_Solar*",
+	  	"Sheet": "Operable",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_3_SolarOperable"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_3_Solar*",
+	  	"Sheet": "Retired and Canceled",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_3_SolarRetCancelled"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_4_Multifuel*",
+	  	"Sheet": "Operable",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_4_MultifuelOperable"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_4_Multifuel*",
+	  	"Sheet": "Proposed",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_4_MultifuelProposed"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*3_4_Multifuel*",
+	  	"Sheet": "Retired and Canceled",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "3_4_MultifuelRetCancelled"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*Owner*",
+	  	"Sheet": "Ownership",
+	  	"Skip": [1, 2],
+	  	"redshiftTableSuffix": "OwnerOwnership"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Boiler Generator",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocBoilerGenerator"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Boiler Cooling",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocBoilerCooling"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Boiler Particulate Matter",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocBoilerParticulateMatter"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Boiler SO2",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocBoilerSO2"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Boiler NOx",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocBoilerNOx"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Boiler Mercury",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocBoilerMercury"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Boiler Stack Flue",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocBoilerStackFlue"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroAssoc*",
+	  	"Sheet": "Emissions Control Equipment",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroAssocEmissionsControlEquipment"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroEquip*",
+	  	"Sheet": "Emission Standards & Strategies",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroEquipEmissionStandardsStrategies"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroEquip*",
+	  	"Sheet": "Boiler Info & Design Parameters",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroEquipBoilerInfoDesignParameters"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroEquip*",
+	  	"Sheet": "Cooling",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroEquipCooling"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroEquip*",
+	  	"Sheet": "FGP",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroEquipFGP"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroEquip*",
+	  	"Sheet": "FGD",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroEquipFGD"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z0-9_]*EnviroEquip*",
+	  	"Sheet": "Stack Flue",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "EnviroEquipStackFlue"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z_]*april_generator*",
+	  	"Sheet": "Operating",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "M_GeneratorOperating"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z_]*april_generator*",
+	  	"Sheet": "Planned",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "M_GeneratorPlanned"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z_]*april_generator*",
+	  	"Sheet": "Retired",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "M_GeneratorRetired"
+	  },
+	  {
+	  	"FileRegex": "[a-zA-Z_]*april_generator*",
+	  	"Sheet": "Canceled or Postponed",
+	  	"Skip": [1, 2, -1],
+	  	"redshiftTableSuffix": "M_GeneratorCanceledorPostponed"
+	  }
+	]
+}

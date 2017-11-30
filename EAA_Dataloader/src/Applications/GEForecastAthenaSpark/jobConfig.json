@@ -1,0 +1,157 @@
+{
+	"name": "GEForecastAthenaSpark",
+    "delimiter": ",",
+    "cleanlocal" : "N",
+    "batchsize": 5000,
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "data", "folder": "csv/data", "new": "Y" },
+        { "name": "attribute", "folder": "csv/attribute", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" } 
+    ],
+    "Databases":[
+    {
+        "execute": "Y",
+	    "common": {
+	        "name": "GEForecast",
+	    	"server": "vwc-2piecdb01.ihsglobal.local",
+    		"port": 27017,
+    		"database": "archive",
+    		"user": "hindsight",
+    		"pwd": "Password123$"
+    	},
+	    "catalogs": [
+	    {
+	    	"name": "giif",
+	    	"execute": "N",
+        	"paramTable": "GEForecast_giif_attributes",
+	    	"schemaName": "eaa_dev",
+		    "tables": [
+		    {
+		    	"schemaName": "eaa_dev",
+		        "table": "GEForecast_giif_attributes",
+		        "new": "N",
+		        "type": "attributes",
+		    	"loadToRedshift": "Y",
+		        "fields": [
+		        	{ "name": "object_id", "type": "VARCHAR", "size": "30" },
+		            { "name": "name", "type": "VARCHAR", "size": "100" },
+		            { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+		            { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+		            { "name": "geo", "type": "VARCHAR", "size": "20" },
+		            { "name": "startDate", "type": "DATE"},
+		            { "name": "endDate", "type": "DATE"},
+		            { "name": "updatedDate", "type": "DATE"},
+		            { "name": "publishedDate", "type": "DATE"},
+		            { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+		            { "name": "dataEdge", "type": "VARCHAR", "size": "100" },
+					{ "name": "max_publish_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}	                
+		        ],
+		    	"sortkey":"object_id"                    
+		    },
+		    {
+		    	"schemaName": "eaa_dev",
+		        "table": "GEForecast_giif_data",
+		        "new": "N",
+		        "type": "series",
+		    	"loadToRedshift": "Y",
+	            "fields": [
+	            	{ "name": "object_id", "type": "VARCHAR", "size": "30" },
+		            { "name": "date", "type": "DATE" },
+		            { "name": "value", "type": "FLOAT8" },
+					{ "name": "max_publish_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}	                
+		        ],
+		    	"sortkey":"object_id, date"                    
+		    }
+		    ]                
+		},
+		{
+			"name": "srs",
+	    	"execute": "N",
+			"paramTable": "GEForecast_srs_attributes",
+	    	"schemaName": "eaa_dev",
+			"tables": [
+			{
+				"schemaName": "eaa_dev",
+			    "table": "GEForecast_srs_attributes",
+			    "new": "N",
+			    "type": "attributes",
+		    	"loadToRedshift": "Y",
+			    "fields": [
+			    	{ "name": "object_id", "type": "VARCHAR", "size": "30" },
+			        { "name": "name", "type": "VARCHAR", "size": "100" },
+			        { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+			        { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+			        { "name": "geo", "type": "VARCHAR", "size": "20" },
+			        { "name": "startDate", "type": "DATE"},
+			        { "name": "endDate", "type": "DATE"},
+			        { "name": "updatedDate", "type": "DATE"},
+			        { "name": "publishedDate", "type": "DATE"},
+			        { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+			        { "name": "dataEdge", "type": "VARCHAR", "size": "100" },
+					{ "name": "max_publish_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}	                
+			    ],
+			    "sortkey":"object_id"                    
+		    },
+			{
+				"schemaName": "eaa_dev",
+			    "table": "GEForecast_srs_data",
+			    "new": "N",
+			    "type": "series",
+		    	"loadToRedshift": "Y",
+			    "fields": [
+			    	{ "name": "object_id", "type": "VARCHAR", "size": "30" },
+			        { "name": "date", "type": "DATE" },
+			        { "name": "value", "type": "FLOAT8" },
+					{ "name": "max_publish_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}	                
+			    ],
+			    "sortkey":"object_id, date"                    
+			}]                
+		},
+		{
+		    "name": "wes",
+	    	"execute": "Y",
+		   	"paramTable": "GEForecast_wes_attributes",
+	    	"schemaName": "eaa_dev",
+			"tables": [
+			{
+				"schemaName": "eaa_dev",
+			    "table": "GEForecast_wes_attributes",
+			    "new": "N",
+			    "type": "attributes",
+		    	"loadToRedshift": "Y",
+	            "fields": [
+	            	{ "name": "object_id", "type": "VARCHAR", "size": "30" },
+			        { "name": "name", "type": "VARCHAR", "size": "100" },
+			        { "name": "mnemonic", "type": "VARCHAR", "size": "100" },
+			        { "name": "frequencyChar", "type": "VARCHAR", "size": "2" },
+			        { "name": "geo", "type": "VARCHAR", "size": "20" },
+			        { "name": "startDate", "type": "DATE"},
+			        { "name": "endDate", "type": "DATE"},
+			        { "name": "updatedDate", "type": "DATE"},
+			        { "name": "publishedDate", "type": "DATE"},
+			        { "name": "longLabel", "type": "VARCHAR", "size": "2000" },
+			        { "name": "dataEdge", "type": "VARCHAR", "size": "100" },
+					{ "name": "max_publish_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}	                
+			    ],
+			    "sortkey":"object_id"                    
+			},
+			{
+				"schemaName": "eaa_dev",
+			    "table": "GEForecast_wes_data",
+			    "new": "N",
+			    "type": "series",
+		    	"loadToRedshift": "Y",
+			    "fields": [
+			    	{ "name": "object_id", "type": "VARCHAR", "size": "30" },
+			        { "name": "date", "type": "DATE" },
+			        { "name": "value", "type": "FLOAT8" },
+					{ "name": "max_publish_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}	                
+			    ],
+			    "sortkey":"object_id, date"                    
+			}]                
+		 }
+		 ]
+	}]
+}

@@ -1,0 +1,12 @@
+{
+	"destinationSchema": "eaa_dev",
+	"sqlScript" : "CreateRigCountTablesTemplate.sql",
+	"tableName" : "RigCount",
+	"bucketName" : "ihs-bda-data",
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",
+	"dateFormat" : "auto",
+	"filetoscan" : "Dashboard - U.S. Oil Pdn.161130 $46.xlsx",
+	"s3SrcDirectory": "projects/Enrg_ExecutiveAffairsAuthority/RigCount",
+	"cleanlocal" : "Y"
+}

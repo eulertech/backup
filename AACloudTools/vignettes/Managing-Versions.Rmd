@@ -1,0 +1,256 @@
+---
+title: "Managing Package Versions"
+author: "Marc Veillet"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Managing Package Versions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Abstract and intended audience
+
+This vignette provides detailled instructions on managing the version(s) of the R libraries (aka 
+"packages") _which we produce at IHSMarkit_,  i.e. it addresses versionning as it pertains to IHSMarkit's
+own libraries such as _AACloudTools_ or _AASpectre_.  Hence, this document is useful to 
+colleagues who _develop_ R libraries and store them in IHSMarkit's repository on Amazon S3 storage.
+
+To a much lesser degree it may also be relevant to _users_ of said libraries.  The key information
+for such users is mostly contained in the following sections:
+
+  * Conventions for Version Numbers.
+  * How to install a Package; How to select the locations where it is downloaded from.
+  * How to check which version of a library is currenty loaded in the R session.
+
+The vignette provides guidance and specific instructions to perform the following tasks:
+
+* Choosing the version number to assign for a improved/fixed version of the package
+* Building the Package and choosing where to save it
+* Installing or updating the package for use within a project
+
+
+## Overview and vocabulary
+
+IHS Markit Advanced Analytics' repository for R libraries is on Amazon S3 storage.  Compared with a
+traditional CRAN-like or a GitHub-hosted repositories, this approach has several advantages, in
+particular a simplified infrastructure and tighter control over dependencies.  On the other hand, 
+it requires some custom logic for installing or updating the libraries.
+
+[] @@@ Work-in-progress @@@ : Placeholder for an diagram showing the various components of the system
+
+**Vocabulary**
+
+* **Development Version Number** : A version number with 4 parts; this is opposed to a _Release Version Number_
+* **dev_number** (of a version number) : the 4th and rightmost numeric value of a Version number, specifically of a _Development Version Number_ since the _Release Version Numbers_ only have 3 numeric parts.
+* **major** (of a version number) : The left-most numeric value of a Version number
+* **minor** (of a version number) : The second left-most numeric value of a Version number
+* **patch_number** (of a version number) : The third (from left) numeric value in a Version number
+* **Release Version Number** : a Version number with 3 parts; this is opposed to a _Development Version Number_
+
+**Source Code**
+
+* **AA_InstallerBootstrap.R** : this file is common to all projects/applicatons; it provides _basic_ access to S3 storage. Although the AACloudTools library provides such access (as well as fully featured functions to interact with S3 and other cloud-based services), the purpose of this "bootstrap" is to allow downloading the Package files from S3 on systems where AACloudTools is yet to be installed.
+* **PackageTools.R** : the script used to check, build and submit a Package file to the S3 repository.  This script may need to be minimally adapted for different package-producing projects (unlike PackageTools_BuildSupport.R, PackageTools_Commons.R and AA_InstallerBootstrap.R which are common to all projects and should not be modified in these projects, but rather be maintained in its custodian project: AACloudTools)
+* **PackageTools_BuildSupport.R** : a set of functions used by PackageTools.R.  These functions are only used at package build time (not at package install time).  Although shared with several projects which produce libraries (e.g. AASpectre), this file should not be modified by these projects, but rather be maintained, centrally, in AACloudTools project.
+* **PackageTools_Commons.R** : this  code file holds common logic that is referenced by both at package build-time (PackageTools.R) and at package install-time (ReInstallPackages.R).  As with PackageTools_BuildSupport.R this file's pilot/custodian is the AACloudTools project.
+* **ReInstallPackages.R** : The script used to download, install (or refresh) all the libraries that an application depends upon. This installs both IHS libraries (e.g. AACloudTools, AASpectre etc.) and CRAN-hosted libraries (e.g. stringr, jsonlite, ranger etc.).  This script is a template which needs to be adapted for each specific application.
+
+
+## Conventions for Version Numbers
+
+A Version Number is made of 3 or 4 numeric values, separated by a dot.  We distinguish between  
+&nbsp; &nbsp; a **"Release" Version Number**, with the format  
+&nbsp; &nbsp; &nbsp; &nbsp; \<major\>\<dot\>\<minor\>\<dot\>\<patch_number\>  
+&nbsp; &nbsp; &nbsp; &nbsp; for example "1.0.17" or "0.5.1"  
+and  
+&nbsp; &nbsp; a **"Development" Version Number**, with the format  
+&nbsp; &nbsp; &nbsp; &nbsp; \<major\>\<dot\>\<minor\>\<dot\>\<patch_number\>\<dot\>\<dev_number\>   
+&nbsp; &nbsp; &nbsp; &nbsp; for example "1.0.17.9006" or "0.5.1.9001"
+
+Although the dash character (-) is also allowed as a separator in an R Version Number, we use exclusively dots,
+never dashes.
+
+By convention, the **dev_number** (the last part of a Development Version Number) starts at 9000 and is
+incremented as warranted by the evolution of project development.  As new features or significant bug fixes or
+improvements are added, the dev_number is bumped-up.  An option to the  _CreateUploadPackageToS3()_
+function provides a way to programmatically increment the dev_number before a new package file is created.
+
+The purpose of the high starting value (9000) for dev_number is to make the overal Version Number stand
+out as a _Development_ Version not a _Release_ Version.  As a general rule end-users are typically directed
+to the repository folders with Release Versions only;  Development versions are reserved to beta
+testers and to end-user in special occasions.
+
+The Version Number is controlled in the _DESCRIPTION_ file, a file found at the root of the R package project. Except
+for the on-demand programmatic increment of the dev_number afore mentioned, **the value of the Version
+Number is managed exclusively manually**, by editing the text, near the top of the DESCRIPTION file.  This
+lack of automation is _by design_ because the choice of the version Number, the timing of its
+changing, the decisions as to which part (minor vs. major vs.patch_number) gets bumped-up etc. are completely
+driven by external events and by the understanding of the context which only the developers of the
+package can apprehend.
+
+## Convention for the subfolders where package files are stored or downloaded from
+
+Another principle used to manage the versionning is the concept of folders (precisely of subFolders) where a
+given package file is stored (by the package developer) or downloaded from (by the package user).  All the
+package files pertaining to a given library are found in the root or in subfolders of the same branch of the
+Repository on S3; this branch root folder is named after the library (e.g AACloudTools or AASPectre).
+
+Although developers can designate _any_ subfolder (any descendent of the the branch root or the root itself), we
+recognize two special purpose folders:
+
+* The official folder where the versions deemed _stable_ are collected : this is in the root folder
+* The folder where the Development Versions are stored : this is in the "DevVersion" folder, just below the root.
+
+By default, the Package Builder script (PackageTools.R) stores its newly created package file to the
+"DevVersion" folder and the Package Installer (ReInstallPackages.R) downloads the soon-to-be-installed package
+from the root folder.
+
+With such defaults, there is no risk that a developer would overwrite a stable version, nor is there a
+risk that a user would inadvertently download anything but a stable version.  It is possible however for both
+of these parties to override the default.  A developer can _explicitly_ upload a newly created package (one
+that is hopefully validated by various tests other reviews) to the folder where stable versions are
+collected; conversely a user can, again, _explicitly_, request to load from the "DevVersion"" folder.
+
+Indeed both developers and users can, respectively, upload to and download from any other subfolder, by
+specifiying the name of the subfolder; the only differences of these specific folders, compared to the
+two special purpose folders are that
+
+* the semantic of the folder is not known. Whereby the root folder is explicitly designated as the place where the lastest stable version is sure to be found, and the "DevVersion" folder is where all the "bleeding edge" of development lives, the meaning of other folders is whatever the developper decides.
+* these folders do not have a shorthand code associated with them. The "DevVersion" folder can be referenced
+as "~Dev" and the root folder as NULL or as "" (empty string), whereby other folder have to be named in full^1^.
+
+Although he or she chooses the folder (or has the root folder picked for him by default), the user does not control
+which file therein gets retrieved.  It is possible, indeed common, that a folder could contain more than one package file.  When
+such is the case, **the Installer script (ReInstallPackages.R) automatically selects the package with the highest version number**.
+For example if the root folder contains the following files
+
+* AACloudTools_0.8.12.tar.gz
+* AACloudTools_0.9.2.tar.gz
+* AACloudTools_0.9.1.tar.gz
+
+Then the installer would pick AACloudTools_0.9.2.tar.gz since this is the highest version.
+
+Note ^1^ Technically there is a third shorthand, "~Ver" which correspond to a folder named after the current
+version whatever it may be.  This is, however, merely a convenience for the developer; at install-time the user
+needs to explicitly use the long hand form such as "1.2.3".
+
+## How to modify the Version Number
+
+This is a package development-time action, typically performed shortly before creating a new package file.
+
+**General case:** This has to be done manually, by editing the the DESCRIPTION file.
+
+**Special case:** To increment the dev_number value, for example if current version is "1.7.2.9021"" and we want
+to change it to "1.7.2.9022". This can be done automatically by setting the incrementDevVersion_ variable to TRUE before source()-ing the PackageTools.R script.
+
+The dev_number only needs to be "bumped-up" when significant changes or bug fixes are introduced; there is no requirement nor need for the dev_number to be used as a build number of sorts (although that can be done in the context of bigger development teams, less informal development flows etc. )
+
+In either case, do remember to eventually commit the modified DESCRIPTION file to Git source control so
+that others can keep changing the version in a monotonical fashion.  (Things gets rather confusing when
+we create multiple distinct version of the package, but with the same version number or when we
+have _newer_ versions with a version number that is less than previously issued package files...) 
+
+## How to build the package and save it to a given location
+
+(See instructions at the bottom of the PackageTools.R file)
+
+The essential work performed by the PackageTools.R script comes from the call to the CreateUploadPackageToS3() function:  
+&nbsp; &nbsp; &nbsp; &nbsp; CreateUploadPackageToS3(packageName=basename(getwd()),  
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; incrementDevVersion=**incrementDevVersion_**,  
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; copyTo=**copyTo_**)  
+The rest of the logic in PackageTools.R merely ensures that dependencies on external libraries are satified, performs some housekeeping and invokes unit-testing when appropriate.
+
+One produces a new package (and get it saved to S3) with the following 4 steps procedure; in most cases only step 3 is needed:
+
+1. _Optionally_ initialize  some of these three variables:  incrementDevVersion_ , copyTo_ and unitTestFilePattern_
+2. _Optionally_ edit the DESCRIPTION file to modifiy the Version Number
+3. Source the PackageTools.R file, as-is and in its entirety.
+4. _Optionally_ submit the changes to DESCRIPTION file to Source Control (Git) if it was explicitly modified (at step #2) or if the incrementDevVersion_ variable was set to TRUE (at step #1).
+
+By default, when none of the variables mentionned at #1 above are initialized, the script builds the package and saves it to the "DevVersion" location.  This is the desired behavior most of the time.
+
+By setting **incrementDevVersion_** to TRUE, we cause the script to first increment the dev_number part of the Version Number before building the package.
+
+By setting **copyTo_** to some value, we cause the script to save the produced package file to alternate locations.  The acceptable values for this variable and the corresponding file copy locations are:
+
+* NULL or empty string = Root of the branch, i.e. the official folder with the stable versions.  Note that saving to this folder requires that the version number be a Release Version Number (3 parts) not a Development Version Number.
+* "~Dev" = "DevVersion" folder, i.e. where the development versions are collected.
+* "~Ver" =  A subfolder, just below the root, and named after the current version
+* Any other string = A subfolder with that name.  For example, "DemoVersion_IBM" would plausibly be a place where the version used for the (fictuous) demo to be delivered at IBM is found; "InCase/SpecialVersions" an example of some other folder (note, BTW,  how it can be deeper that just below the branch root).
+
+By setting the **unitTestFilePattern_** variable to "" (empty string) we prevent the Unit Testing to take place at all.  By setting it to other patterns such as, say, "^(FluxCapacitor|FusionEngine)$" we cause the unit tests to be limited to the testFluxCapacitor.R and testFusionEngine.R files (of an obviously very intersting project!)
+
+## How to list the available packages in the S3 repository
+
+**Note:** The root of all package files is _currently_ "s3://ihs-temp/packages/"; we expect this
+to change in the near future, to point to a less "temporary" storage.  Regardless of where this
+root resides, the structure described elsewhere ( whereby just below this root are the "home"/"root"
+folders of the individual libraries) holds.
+
+This is done by running "aws s3 ls ..." command(s) in AWS Command Line Interface (AWS CLI).  This
+is done from the OS console (PowerShell, DOS prompt ...)  
+&nbsp; &nspb; &nbsp; &nspb;  aws s3 ls s3://ihs-temp/packages/AACloudTools/"
+   
+Such commands can also called from RStudio with the following snippet  
+&nbsp; &nspb; &nbsp; &nspb;  system("aws s3 ls s3://ihs-temp/packages/AACloudTools/")
+
+We may eventually introduce features to browse the "catalog" of available current and past versions
+available in the s3 repository.  But since the default behavior is to installing the version with
+the highest version number found in the folder designated for holding the _stable_ versions,
+there's probalby little need for end-users to peruse the catalog; any such need can be
+met with a bit of caution with the AWS CLI commands.
+
+## How to delete some packages file in the Repository
+
+Again, this is done running an AWS CLI command, directly or within RStudio.  (see above)  
+The command would be something like  
+&nbsp; &nspb; &nbsp; &nspb; system("aws s3 rm s3://ihs-temp/packages/AACloudTools/Dev/AACloudTools_0.9.0.9002.tar.gz")
+
+Use with caution, and indeed several users may not have the privileges necessary to perform such deletions.
+This, again, is appropriate, we anticipate that Package developers and system administrator would perform any
+cleaning necessary to keep the repository as complete as possible, but free of very old or redundant
+version and other clutter at large.
+
+
+## How to check which version of a library is currenty loaded in the R session
+From RStudio 'View' menu + 'Show Packages' (ctrl + 7), or even more simply a click onthe **'Packages' tab** of
+Files/Plots/Help/Viewer panel brings up the list of libraries, in alphabetic order and
+showing their short description (Title) and Version, along with a link to the index page of
+the corresponding manual!
+
+Alternatively, from the R Console, use the function **utils::sessionInfo()**, as in some of the following examples.
+The output from this function can be a bit messy and verbose but one can typically quickly locate the info for
+the packages of interest.
+
+&nbsp; &nspb; &nbsp; &nspb; \> sessionInfo()
+&nbsp; &nspb; &nbsp; &nspb; \> sessionInfo("AACloudTools")
+&nbsp; &nspb; &nbsp; &nspb; \> sessionInfo()$otherPkgs$AACloudTools
+
+(this last one shows the whole "header" information for the library: its Description, dependencies,
+Build details, Build date,  Copyright, as well as the version number of course.
+
+## How to install a Package; How to select the locations where it is downloaded from
+
+The **ReInstallPackages.R** script (which is customized for each particular application, based
+on a template script).  When properly configured these customized scripts can typically be sourced,
+top-to-bottom, to install or refresh all of the libraries used by the application, and use the
+most recent _stable_ version  (technically, the file with the highest version, in the folder
+where the stable versions are collected).  This is typically what is desired.
+
+To load IHS packages from alternative places, modify the content of the ihsPackagesToInstall variable.
+This contains a vector of character strings, where each string is made of two parts, in this order:
+
+* The SubLocation : either a shorthand code or an explicit subfolder name
+* The PackageName : The name of the package such as "AACloudTools"
+
+The SubLocation is optional and when it is omitted, the SubLocation is understood to be the root, i.e.
+where the stable versions are kept.
+
+For example  
+&nbsp; &nspb; &nbsp; &nspb;ihsPackagesToInstall <- c("~Dev|AACloudTools", "AASpectre", "DemoForIbm|AA_Nlp")  
+would result in installing 3 libraries, AACloudTools, AASpectre and AA_Nlp (this latter a fictuous library used
+for illustration purposes only);  AACloudTools would be the most recent development version,  AASpectre,
+the most recent Stable version and AA_Nlp coming from the subfolder "DemoForIbm").
+
+

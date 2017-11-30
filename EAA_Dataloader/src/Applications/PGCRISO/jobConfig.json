@@ -1,0 +1,51 @@
+{
+	"destinationSchema": "pgcr_stage",
+	"tableName":"iso_",	
+	"sqlScript" : "SchemaCreationTemplate.sql",	
+	"charsToBeReplaced": [
+        {
+            "\r\n+":" ",
+            "\n+": " ",
+            "\t+": " ",
+            "[\\x00]+":" ",
+            "[\\xe2]+":" ",
+            "\\u[0-9]+":" "
+        }
+    ],	
+	"bucketName" : "ihs-bda-data",		 
+	"s3SrcDirectory":"/projects/Pgcr_WindDashboard/Raw/temp/iso/",	
+	"delimiter" : ",",
+	"outputDelimiter":"|",
+	"fileFormat" : "GZIP",	
+	"dateFormat":"YYYY-MM-DD",			
+	"input_file_type":"*.csv",  	
+	
+	"iso_files":[
+	{
+		"Name":"CAISO"				
+	},
+	{
+		"Name":"PJM"		
+	},
+	{
+		"Name":"ERCOT"		
+	},	
+	{
+		"Name":"NYISO"		
+	},	
+	{
+		"Name":"SPP"		
+	},
+	{
+		"Name":"MISO",
+		"IgnoreLines":[1,2,4],
+		"column_count":13,
+		"clean_path":"cleaned/"				
+	},
+	{
+		"Name":"NEISO",		
+		"IgnoreLines":[1,2,3,4,6],
+		"clean_path":"cleaned/"				
+	}
+	]	
+}

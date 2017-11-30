@@ -1,0 +1,20 @@
+{
+	"destinationSchema": "pgcr_dev",
+	"tableName":"ercot_",	
+	"sqlScript" : "CreatePGCRERCOTDataTablesTemplate.sql",
+	"PostLoadScript": "l2Tables.sql",
+	"bucketName" : "ihs-bda-data",
+	"s3SrcDirectory":"/projects/Pgcr_WindDashboard/ERCOT/",
+	"s3ToDirectory":"/projects/Pgcr_WindDashboard/ERCOT_packed/",
+	"files": [
+		{
+			"FileRegex":"DAM_Hr_LMP_\\d{4}.*",
+			"SkipRows":[1],
+		  	"redshiftTableSuffix": "DAM"
+		}
+	],
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",	
+	"dateFormat":"YYYY-MM-DD",			
+	"input_file_type":"*.CSV"
+}

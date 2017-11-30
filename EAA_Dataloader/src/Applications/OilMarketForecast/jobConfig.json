@@ -1,0 +1,41 @@
+{
+	"destinationSchema": "eaa_dev",
+	"bucketName" : "ihs-bda-data",
+	"s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/OilMarketForecast",
+    "fileFormat" : "GZIP",
+    "delimiter": ",",
+    "dateFormat" : "auto",
+    "cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" }        
+    ],
+    "foldertoscan": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\ShortTermForecast",
+    "sheets": [
+    	{ 
+    		"name": "Liquids demand",
+    		"headingline": 5
+    	}, 
+    	{ 
+    		"name": "ST global balance (monthly)",
+    		"headingline": 5,
+    		"specificlable": "Inventory dynamics",
+    		"dataline": 1
+    	}
+    ],
+    "tables": [{
+    		"schemaName": "eaa_dev",
+            "table": "OilMarketForecast",
+            "new": "Y",
+            "fields": [
+                { "name": "name", "type": "VARCHAR", "size": "255" },
+                { "name": "category", "type": "VARCHAR", "size": "30" },
+                { "name": "date", "type": "DATE" },
+                { "name": "value", "type": "REAL" }                
+            ],
+       		"sortkey":"name, category, date",
+       		"distkey":"category"                
+        }
+    ]
+}

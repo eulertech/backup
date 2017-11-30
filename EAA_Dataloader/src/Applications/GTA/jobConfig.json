@@ -1,0 +1,249 @@
+{
+	"destinationSchema": "gta_warehouse",
+	"bucketName" : "ihs-bda-data",
+	"s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/GTAP3",
+    "fileFormat" : "GZIP",
+    "delimiter": "|",
+    "dateFormat" : "auto",
+    "cleanlocal" : "N",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" }        
+    ],
+     "Databases":[
+    {
+        "execute": "Y",
+		"common": {		
+	        "name": "GTA",
+	        "mssqlLoginInfo": "-S Columbia3.ihs.internal.corp -d GTA_WAREHOUSE -T",
+			"sqlPullDataScriptTemplate" : "GetGTADataTemplate.sql",
+			"sqlPullDataScriptTemplateMetered" : "GetGTADataMeteredTemplate.sql",
+			"sqlSpecialCharacterScriptTemplate" : "UpdateSpecialCharacterTableNameTemplate.sql",
+			"sqlUpdateScript" : "UpdateGTATemplate.sql",
+			"sqlPullIncrementalTemplate": "GetGTAIncremenalDataTemplate.sql",
+			"driver": "{ODBC Driver 13 for SQL Server}",
+			"server": "Columbia3.ihs.internal.corp"			
+		},
+        "catalogs":[
+        {
+	        "execute": "Y",
+	        "name": "EHSA",
+	        "tables": [
+	    	{
+	    		"schemaName": "gta_warehouse",
+	            "table": "EHSA_working",
+	            "new": "Y",
+	            "type": "working",
+	            "incrementalconditions": 
+	            {
+	            	"pullcondition": "  yr > ",
+	            	"sourceSchema": "gta_warehouse",
+	           		"sourcetable": "EHSA",
+	           		"chunksize": 1,	           		
+	           		"keyfield":"YR",          		
+	           		"startID": 2015,
+	           		"endID": 2015
+	            },
+	            "keepsettings":
+	            {
+	           		"startID": 2015,
+	           		"endID": 2016
+	            },	            
+	            "pullTemplate": "sqlPullDataScriptTemplate",
+	            "s3subfolder": "EHSA",
+	            "sourcetable": "EHSA",
+	            "fields": [
+	                { "name": "YR", "type": "INTEGER"},
+	                { "name": "MON", "type": "SMALLINT" },
+	                { "name": "QTR", "type": "INTEGER"},
+	                { "name": "RPT_CTY", "type": "VARCHAR", "size": "50" },
+	                { "name": "COMMODITY", "type": "VARCHAR", "size": "12" },
+	                { "name": "HTS", "type": "VARCHAR", "size": "6" },
+	                { "name": "UNIT2", "type": "VARCHAR", "size": "3" },
+	                { "name": "PTN_CTY", "type": "VARCHAR", "size": "90"},
+	                { "name": "QTY2", "type": "REAL" },
+	                { "name": "VALUE_US", "type": "REAL" },
+	                { "name": "QUANTITY_", "type": "REAL" },
+	                { "name": "UNIT", "type": "VARCHAR", "size": "3" },
+	                { "name": "yrmoncomm", "type": "VARCHAR", "size": "20",
+	                	"validation": "RIGHT('0000' + CAST(YR AS NVARCHAR), 4)+RIGHT('0000' + CAST(mon AS NVARCHAR), 2)+[COMMODITY]"
+	                }               
+	            ],
+	       		"sortkey":"yrmoncomm",
+	       		"distkey":"yrmoncomm"                
+	        },
+			{
+	    		"schemaName": "gta_warehouse",
+	            "table": "EHSA",
+	            "new": "N",
+	            "type": "data",
+	            "updateSection":
+	            {
+	            	"workingtable": "EHSA_working",
+	            	"workingschemaname": "gta_warehouse",
+	            	"keyfields": "YR",
+	            	"join": "a.commodity = b.commodity and a.rpt_cty = b.rpt_cty and a.ptn_cty = b.ptn_cty and a.yr = b.yr and a.mon = b.mon "
+	            },
+	            "fields": [
+	                { "name": "YR", "type": "INTEGER"},
+	                { "name": "MON", "type": "SMALLINT" },
+	                { "name": "QTR", "type": "INTEGER"},
+	                { "name": "RPT_CTY", "type": "VARCHAR", "size": "50" },
+	                { "name": "COMMODITY", "type": "VARCHAR", "size": "12" },
+	                { "name": "HTS", "type": "VARCHAR", "size": "6" },
+	                { "name": "UNIT2", "type": "VARCHAR", "size": "3" },
+	                { "name": "PTN_CTY", "type": "VARCHAR", "size": "90"},
+	                { "name": "QTY2", "type": "REAL" },
+	                { "name": "VALUE_US", "type": "REAL" },
+	                { "name": "QUANTITY_", "type": "REAL" },
+	                { "name": "UNIT", "type": "VARCHAR", "size": "3" },
+	                { "name": "yrmoncomm", "type": "VARCHAR", "size": "20"}
+	            ],
+	       		"sortkey":"yrmoncomm",
+	       		"distkey":"yrmoncomm"                
+	        },
+	        {
+	    		"schemaName": "gta_warehouse",
+	            "table": "EHS4",
+	            "new": "Y",
+	            "type": "agg",
+	            "fields": [
+	                { "name": "YR", "type": "INTEGER"},
+	                { "name": "MON", "type": "SMALLINT" },
+	                { "name": "QTR", "type": "INTEGER"},
+	                { "name": "RPT_CTY", "type": "VARCHAR", "size": "50" },
+	                { "name": "COMMODITY", "type": "VARCHAR", "size": "12" },
+	                { "name": "HTS", "type": "VARCHAR", "size": "6" },
+	                { "name": "UNIT", "type": "VARCHAR", "size": "3" },
+	                { "name": "PTN_CTY", "type": "VARCHAR", "size": "90"},
+	                { "name": "QUANTITY_", "type": "REAL" },
+	                { "name": "VALUE_US", "type": "REAL" },
+	                { "name": "qty2", "type": "REAL" },
+	                { "name": "UNIT2", "type": "VARCHAR", "size": "3" },
+	                { "name": "yrmoncomm", "type": "VARCHAR", "size": "20"}
+	            ],
+	       		"sortkey":"yrmoncomm",
+	       		"distkey":"yrmoncomm"                
+	        }                
+			]
+        },
+        {
+	        "execute": "Y",
+	        "name": "IHSA",
+	        "tables": [
+	    	{
+	    		"schemaName": "gta_warehouse",
+	            "table": "IHSA_working",
+	            "new": "Y",
+	            "type": "working",
+	            "incrementalconditions": 
+	            {
+	            	"pullcondition": "  yr > ",
+	            	"sourceSchema": "gta_warehouse",
+	           		"sourcetable": "IHSA",
+	           		"chunksize": 1,	           		
+	           		"keyfield":"YR",          		
+	           		"startID": 2014,
+	           		"endID": 2014
+	            },
+	            "keepsettings":
+	            {
+	           		"startID": 2015,
+	           		"endID": 2016
+	            },	            
+	            "pullTemplate": "sqlPullDataScriptTemplate",
+	            "s3subfolder": "IHSA",
+	            "sourcetable": "IHSA",
+	            "fields": [
+	                { "name": "YR", "type": "INTEGER"},
+	                { "name": "MON", "type": "SMALLINT" },
+	                { "name": "QTR", "type": "INTEGER"},
+	                { "name": "RPT_CTY", "type": "VARCHAR", "size": "50",
+	                	"validation": " NULLIF(cast(REPLACE(CAST(RPT_CTY AS VARBINARY(50)), 0x7e, '\/') as VARCHAR(50)),'')"
+	                },
+	                { "name": "COMMODITY", "type": "VARCHAR", "size": "12" },
+	                { "name": "HTS", "type": "VARCHAR", "size": "6" },
+	                { "name": "UNIT2", "type": "VARCHAR", "size": "3" },
+	                { "name": "PTN_CTY", "type": "VARCHAR", "size": "90"},
+	                { "name": "QTY2", "type": "REAL" },
+	                { "name": "VALUE_US", "type": "REAL" },
+	                { "name": "QUANTITY_", "type": "REAL" },
+	                { "name": "UNIT", "type": "VARCHAR", "size": "3" },
+	                { "name": "yrmoncomm", "type": "VARCHAR", "size": "20",
+	                	"validation": "RIGHT('0000' + CAST(YR AS NVARCHAR), 4)+RIGHT('0000' + CAST(mon AS NVARCHAR), 2)+[COMMODITY]"
+	                }               
+	            ],
+	       		"sortkey":"yrmoncomm",
+	       		"distkey":"yrmoncomm"                
+	        },
+			{
+	    		"schemaName": "gta_warehouse",
+	            "table": "IHSA",
+	            "new": "N",
+	            "type": "data",
+	            "updateSection":
+	            {
+	            	"workingtable": "IHSA_working",
+	            	"workingschemaname": "gta_warehouse",
+	            	"keyfields": "YR",
+	            	"join": "a.commodity = b.commodity and a.rpt_cty = b.rpt_cty and a.ptn_cty = b.ptn_cty and a.yr = b.yr and a.mon = b.mon "
+	            },
+	            "fields": [
+	                { "name": "YR", "type": "INTEGER"},
+	                { "name": "MON", "type": "SMALLINT" },
+	                { "name": "QTR", "type": "INTEGER"},
+	                { "name": "RPT_CTY", "type": "VARCHAR", "size": "50" },
+	                { "name": "COMMODITY", "type": "VARCHAR", "size": "12" },
+	                { "name": "HTS", "type": "VARCHAR", "size": "6" },
+	                { "name": "UNIT2", "type": "VARCHAR", "size": "3" },
+	                { "name": "PTN_CTY", "type": "VARCHAR", "size": "90"},
+	                { "name": "QTY2", "type": "REAL" },
+	                { "name": "VALUE_US", "type": "REAL" },
+	                { "name": "QUANTITY_", "type": "REAL" },
+	                { "name": "UNIT", "type": "VARCHAR", "size": "3" },
+	                { "name": "yrmoncomm", "type": "VARCHAR", "size": "20"}
+	            ],
+	       		"sortkey":"yrmoncomm",
+	       		"distkey":"yrmoncomm"                
+	        },
+	        {
+	    		"schemaName": "gta_warehouse",
+	            "table": "IHS4",
+	            "new": "y",
+	            "type": "agg",
+	            "fields": [
+	                { "name": "YR", "type": "INTEGER"},
+	                { "name": "MON", "type": "SMALLINT" },
+	                { "name": "QTR", "type": "INTEGER"},
+	                { "name": "RPT_CTY", "type": "VARCHAR", "size": "50" },
+	                { "name": "COMMODITY", "type": "VARCHAR", "size": "12" },
+	                { "name": "HTS", "type": "VARCHAR", "size": "6" },
+	                { "name": "UNIT2", "type": "VARCHAR", "size": "3" },
+	                { "name": "PTN_CTY", "type": "VARCHAR", "size": "90"},
+	                { "name": "QTY2", "type": "REAL" },
+	                { "name": "VALUE_US", "type": "REAL" },
+	                { "name": "QUANTITY_", "type": "REAL" },
+	                { "name": "UNIT", "type": "VARCHAR", "size": "3" },
+	                { "name": "yrmoncomm", "type": "VARCHAR", "size": "20"}
+	            ],
+	       		"sortkey":"yrmoncomm",
+	       		"distkey":"yrmoncomm"                
+	        }                
+			]
+        }
+        ]    
+    }
+   ],
+	"bcpUtilityDirOnLinux": "/opt/mssql-tools/bin"
+	,"extrastuff": [
+	                { "name": "", "type": "VARCHAR", "size": "" },
+	                { "name": "", "type": "INTEGER"},
+	                { "name": "", "type": "REAL"},
+	                { "name": "", "type": "SMALLINT"},
+	                { "name": "", "type": "BIGINT"},
+	                { "name": "", "type": "BOOLEAN" },
+	                { "name": "", "type": "DECIMAL", "size": "5,3" },
+	                { "name": "", "type": "TIMESTAMP" }
+	]		
+}

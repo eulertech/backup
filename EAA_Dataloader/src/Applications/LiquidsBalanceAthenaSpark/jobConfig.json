@@ -1,0 +1,227 @@
+{
+	"name": "LiquidsBalance",
+	"cleanlocal" : "Y",
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+	"common": {
+		"name": "LiquidsBalanceXLSB",
+		"cmd": "xlsbExtractor #WORKINGFOLDER# #SOURCEFILE# #SHEETS# #DESTINATIONFILE#",
+		"inputFilePrefix" : "WOW_LiquidsBalance_",
+		"sheetsToExtract": "Crude,TightOil",
+		"inputFileExt": ".xlsb",
+		"sharedSrcFolder": "\\\\hou0\\vol3\\ZLSD\\Common\\Multiclt\\CRDPROD\\WOW\\",
+		"sheetsOutputFormat": "csv",
+		"yearValueDataType": "FLOAT4"
+	},
+	"folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "raw", "folder": "raw", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" }        
+    ],
+	"catalogs": [
+		{
+			"name": "LiquidsBalanceCrude",
+			"execute": "Y",
+			"applyCategoryCol": "Y",
+			"tables": [
+				{
+		    		"schemaName": "energy_prod",
+		            "table": "LiquidsBalance_crude",
+		            "new": "Y",
+		            "type": "destination",
+		            "fields": [
+		                { "name": "category", "type": "VARCHAR", "size": "20" },
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" },
+		                { "name": "year", "type": "VARCHAR", "size": "4" },
+		                { "name": "value", "type": "FLOAT4" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_total",
+		            "type": "raw",
+		            "sheetSrc": {
+		            	"name": "Crude",
+		            	"subSetName": "Total",
+		            	"subSetNameBwd": "",
+		            	"subSetNameFwd": "ASW",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_asw",
+		            "type": "raw",
+		            "sheetSrc": {
+		            	"name": "Crude",
+		            	"subSetName": "ASW",
+		            	"subSetNameBwd": "ASW",
+		            	"subSetNameFwd": "Rivalry",
+				        "delimiter": ",", 
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_rivalry",
+		            "type": "raw",
+		            "sheetSrc": {
+				        "name": "Crude",
+		            	"subSetName": "Rivalry",
+		            	"subSetNameBwd": "Rivalry",
+		            	"subSetNameFwd": "Onshore",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_onshore",
+		            "type": "raw",
+		            "sheetSrc": {
+				        "name": "Crude",
+		            	"subSetName": "Onshore",
+		            	"subSetNameBwd": "Onshore",
+		            	"subSetNameFwd": "Offshore",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_offshore",
+		            "type": "raw",
+		            "sheetSrc": {
+				        "name": "Crude",
+		            	"subSetName": "Offshore",
+		            	"subSetNameBwd": "Offshore",
+		            	"subSetNameFwd": "Shallow",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_shallowwater",
+		            "type": "raw",
+		            "sheetSrc": {
+				        "name": "Crude",
+		            	"subSetName": "Shallow",
+		            	"subSetNameBwd": "Shallow",
+		            	"subSetNameFwd": "Deepwater",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_deepwater",
+		            "type": "raw",
+		            "sheetSrc": {
+				        "name": "Crude",
+		            	"subSetName": "Deepwater",
+		            	"subSetNameBwd": "Deepwater",
+		            	"subSetNameFwd": "Ultra-deep",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_crude_ultradeepwater",
+		            "type": "raw",
+		            "sheetSrc": {
+		            	"name": "Crude",
+		            	"subSetName": "Ultra-deep",
+		            	"subSetNameBwd": "Ultra-deep",
+		            	"subSetNameFwd": "",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 17,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        }
+		    ]			
+		},
+		{
+			"name": "LiquidsBalanceTightOil",
+			"execute": "Y",
+			"applyCategoryCol": "N",
+			"tables": [
+		        {
+		    		"schemaName": "energy_prod",
+		            "table": "LiquidsBalance_tightoil",
+		            "new": "Y",
+		            "type": "destination",
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" },
+		                { "name": "year", "type": "VARCHAR", "size": "4" },
+		                { "name": "value", "type": "FLOAT4" }
+		            ]                
+		        },
+		        {
+		            "table": "xlsb_tightoil",
+		            "type": "raw",
+		            "sheetSrc": {
+		            	"name": "TightOil",
+				        "subSetName": "",
+		            	"subSetNameBwd": "",
+		            	"subSetNameFwd": "",
+						"rowHeader": 0, 
+						"skipTopRows": 0, 
+						"skipBottomRows": 16,
+						"cols": [0, 1]
+		            },
+		            "fields": [
+		                { "name": "region", "type": "VARCHAR", "size": "50" },
+		                { "name": "country", "type": "VARCHAR", "size": "50" }
+		            ]                
+		        }
+		    ]			
+		}
+	]
+}

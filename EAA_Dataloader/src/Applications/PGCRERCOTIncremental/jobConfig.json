@@ -1,0 +1,20 @@
+{
+	"destinationSchema": "pgcr_dev",
+	"tableName":"ercot_",	
+	"sqlScript" : "CreatePGCRERCOTIncrementalDataTablesTemplate.sql",
+	"PostLoadScript": "l2Tables.sql",
+	"bucketName" : "ihs-bda-data",
+	"s3SrcDirectory":"/projects/Pgcr_WindDashboard/Raw/DAM/",
+	"s3ToDirectory":"/projects/Pgcr_WindDashboard/ERCOTIncremental_packed/",
+	"files": [
+		{
+			"FileRegex":"\\d{8}/cdr\\.\\d{8}\\.0{16}\\.\\d{8}\\.\\d{9}\\.DAMHRLMPNP4183_csv\\.zip",
+			"SkipRows":[1],
+		  	"redshiftTableSuffix": "DAM"
+		}
+	],
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",	
+	"dateFormat":"YYYY-MM-DD",			
+	"input_file_type":"*.CSV"
+}

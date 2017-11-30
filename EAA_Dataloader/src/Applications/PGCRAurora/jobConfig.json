@@ -1,0 +1,35 @@
+{
+  "destinationSchema": "pgcr_dev",
+  "sqlScript": "CreateAuroraTablesTemplate.sql",
+  "postETLQueries":"postETLQueries.sql",
+  "tableName": "Aurora_",
+  "bucketName": "ihs-bda-data",
+  "delimiter": ",",
+  "fileFormat": "GZIP",
+  "srcfileFormat": ".xlsx",
+  "dateFormat": "YYYY-MM-DD",
+  "s3SrcDirectory": "projects/Pgcr_WindDashboard/Raw/Aurora",
+  "s3ToDirectory": "/projects/Pgcr_WindDashboard/Cleaned/Aurora/",
+  "ExcelSheets": [
+	  {
+	  	"FileRegex": "*ForRoger*",
+	  	"Sheet": "Aurora Prices - RIV H1 2017",
+	  	"Skip": [1],
+	  	"redshiftTableSuffix": "2017H1"
+	  },
+	  {
+	  	"FileRegex": "*ForRoger*",
+	  	"Sheet": "Historical Zonal Prices",
+	  	"Skip": [1],
+	  	"redshiftTableSuffix": "HistoricalPrices"
+	  },
+	  {
+	  	"FileRegex": "*ForRoger*",
+	  	"Sheet": "Historical Zonal Load",
+	  	"Skip": [1],
+	  	"redshiftTableSuffix": "HistoricalLoad"
+	  }
+	],
+
+  "srcFileParameters": ["ForRoger"]
+}

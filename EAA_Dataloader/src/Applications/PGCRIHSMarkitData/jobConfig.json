@@ -1,0 +1,170 @@
+{
+	"destinationSchema": "pgcr_dev",
+	"tableName":"ihsmarkitdata_",	
+	"sqlScript" : "CreateIHSMarkitDataTablesTemplate.sql",	
+	"bucketName" : "ihs-bda-data",
+	"s3SrcDirectory":"/projects/Pgcr_WindDashboard/Raw/IHSMarkitData/",
+	"files":[
+		{
+			"redshiftTableSuffix":"Balancing_authority_map",
+			"RegexPattern":"Balancing_authority_map.csv",
+			"SkipRows":[1]			
+		},
+		{
+			"redshiftTableSuffix":"Buyers_map",
+			"RegexPattern":"Buyers_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Class_name_map",
+			"RegexPattern":"Class_name_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"IHS_Project_Data",
+			"RegexPattern":"IHS_Project_Data.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Increment_peaking_name_map",
+			"RegexPattern":"Increment_peaking_name_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Product_map",
+			"RegexPattern":"Product_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Rate_units_map",
+			"RegexPattern":"Rate_units_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Seller_EIA_ID",
+			"RegexPattern":"Seller_EIA_ID.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Sellers_map",
+			"RegexPattern":"Sellers_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Super_EER_ID_Jaime_map",
+			"RegexPattern":"Super_EER_ID_Jaime_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Time_Zone_map",
+			"RegexPattern":"Time_Zone_map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Trading_Hubs_map",
+			"RegexPattern":"Trading_Hubs_map.csv",
+			"Delimiter":"\t",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"bilinear_lat_lon",
+			"RegexPattern":"bilinear_LAT_36.1225_LON_-98.9922.CFSR_22m.txt",
+			"Delimiter":"\t",
+			"SkipRows":[1,2,3,4,5,6,7,8,9,10,11,12,13]
+		},
+		{
+			"redshiftTableSuffix":"ERCOT_Node_Zone_Map",
+			"RegexPattern":"ERCOT Node-Zone Map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Electric_Plant_in_Service_Row_Map",
+			"RegexPattern":"Electric Plant in Service Row Map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"O_and_M_Row_Map",
+			"RegexPattern":"O and M Row Map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"OandM_Fields",
+			"RegexPattern":"O&M Fields.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"OandMTotals",
+			"RegexPattern":"OandMTotals.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Payroll_Map",
+			"RegexPattern":"Payroll Map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"ErcotBus_923Plant_Map",
+			"RegexPattern":"Ercot Bus to 923 Plant map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Bus2FuelType_Map",
+			"RegexPattern":"Bus2FuelType Map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"ErcotGenBus_923Plant_Map",
+			"RegexPattern":"Generator Node 2 EIA Plant Map.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"CountyZone_Map",
+			"RegexPattern":"County Zone Mapping.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"FederalHolidays",
+			"RegexPattern":"FederalHolidays.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"ERCOT_HourlyDemand",
+			"RegexPattern":"ERCOT_HourlyDemand.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"ERCOT_Zonal_Wind",
+			"RegexPattern":"ZonalWind.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Coal_Mapping_AM_860",
+			"RegexPattern":"Coal_Mapping_Airmarkets_860.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"ERCOT_HourlyPrices",
+			"RegexPattern":"hourprices_fixed.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"ERCOT_Aurora_Prices",
+			"RegexPattern":"ERCOTAuroraPrices.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Coal_Mapping_AM_860_inclERCOT",
+			"RegexPattern":"ihsmarkitdata_coal_mapping_am_860_inclERCOT.csv",
+			"SkipRows":[1]
+		},
+		{
+			"redshiftTableSuffix":"Hourly_ERCOT_Zonal_Forecast",
+			"RegexPattern":"HourlyERCOTData.csv",
+			"SkipRows":[1]
+		}
+		],	
+	"delimiter" : ",",
+	"fileFormat" : "GZIP",	
+	"dateFormat":"YYYY-MM-DD",			
+	"input_file_type":"*.CSV"
+}

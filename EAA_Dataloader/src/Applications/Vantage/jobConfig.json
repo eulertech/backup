@@ -1,0 +1,22 @@
+{
+	"destinationSchema": "eaa_stage",
+	"sqlScript" : "CreateVantageTablesTemplate.sql",
+	"tableName" : "vantage_",
+	"bucketName" : "ihs-bda-data",
+	"s3ToDirectory": "/projects/Enrg_ExecutiveAffairsAuthority/Vantage/Data",
+    "fileFormat" : "GZIP",
+    "delimiter": "|",
+    "dateFormat" : "auto",
+    "bcpUtilityDirOnLinux": "/opt/mssql-tools/bin",
+    "mssqlLoginInfo": "-S vwc-2smerdb01.ihsglobal.local -dVantageDWAC -T",
+    "extractingScripts":[
+    	{ "tableSuffix": "asset_summary", "scriptFile": "/sql/GetAssetSummary.sql" },
+    	{ "tableSuffix": "asset_annual", "scriptFile": "/sql/GetAssetAnnual.sql" },
+    	{ "tableSuffix": "project_summary", "scriptFile": "/sql/GetProjectSummary.sql" },
+    	{ "tableSuffix": "project_annual", "scriptFile": "/sql/GetProjectAnnual.sql" },
+    	{ "tableSuffix": "project_monthly", "scriptFile": "/sql/GetProjectMonthly.sql" },
+    	{ "tableSuffix": "well_summary", "scriptFile": "/sql/GetWellSummary.sql" },
+    	{ "tableSuffix": "well_annual", "scriptFile": "/sql/GetWellAnnual.sql" },
+    	{ "tableSuffix": "well_monthly", "scriptFile": "/sql/GetWellMonthly.sql" }
+    ]
+}

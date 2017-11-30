@@ -1,0 +1,20 @@
+{
+	"destinationSchema": "eaa_dev",
+	"sqlScript" : "CreateConsensusTablesTemplate.sql",
+	"tableName" : "consensus_economics",
+	"bucketName" : "ihs-bda-data",
+	"srcSharedFolder": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\ConsensusEconomics",
+	"s3ToDirectory": "/projects/Enrg_ExecutiveAffairsAuthority/ConsensusEconomics/Data",
+	"fileNamePrefix": "EM",
+	"validExts": [".xls", ".xlsx"],
+	"worksheetName": "Crude Oil - Brent",
+	"columnsToDrop": ["on Survey Date", "from spot"],
+	"dropAfterHeader": [0,1,2,3,4,5,6,7,8,9,10,11,12,13],
+    "fileFormat" : "GZIP",
+    "skipRows": 4,
+    "surveyDateRow": 4,
+    "skipFooter": 0,
+    "delimiter": ",",
+    "dateFormat" : "auto",
+  	"cleanlocal" : "Y"     
+}

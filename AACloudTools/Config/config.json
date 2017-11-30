@@ -1,0 +1,14 @@
+{"configuration": {
+    "redshift": {
+    "DriverClass": "com.amazon.redshift.jdbc41.Driver",
+    "DriverPath": "Obsolete",
+    "Hostname": "ihs-lake-doppler.cop6dfpxh7ta.us-west-2.redshift.amazonaws.com",
+    "Database": "lake_one",
+    "Port": 5439,
+    "UserPasswordFile" : "./Config/redshift_username_password.json"
+  },
+  "S3": {
+    "access_key_id": "AKIAJYXVBNHTJNSA27EQ",
+    "secret_access_key": "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"
+  }
+}}

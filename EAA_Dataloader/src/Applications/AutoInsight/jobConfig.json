@@ -1,0 +1,25 @@
+{
+	"destinationSchema": "eaa_dev",
+	"srcSharedFolder": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\IHSAutomotive\\",
+	"s3ToDirectory": "/projects/Enrg_ExecutiveAffairsAuthority/AutoInsight/Data",
+	"fileName": "Query_ScenarioJuly2017_000120172508035955.xlsx",
+	"bucketName" : "ihs-bda-data",
+	"worksheetName": "Query",
+	"columns_no_melt": ["Vehicle Sales: Country", "Vehicle Sales: Actual Line Date"],
+    "fileFormat" : "GZIP",
+    "skipRows": 0,
+    "skipFooter": 3,
+    "delimiter": ",",
+    "dateFormat" : "auto",
+  	"cleanlocal" : "N",
+  	"ddl": {
+  		"table" : "auto_insight_scenario",
+        "new": "Y",
+        "fields": [
+            { "name": "country", "type": "VARCHAR", "size": "50" },
+            { "name": "actual_line_date", "type": "DATE" },
+            { "name": "date", "type": "DATE" },
+            { "name": "value", "type": "INT" }
+        ]
+  	}
+}

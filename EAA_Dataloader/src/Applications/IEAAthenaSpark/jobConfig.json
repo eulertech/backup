@@ -1,0 +1,134 @@
+{
+	"name": "IEA",
+	"cleanlocal" : "N",  
+	"delimiter" : ",",
+	"folders": [
+		{ "name": "sql", "folder": "sql", "new": "Y" },
+		{ "name": "csv", "folder": "csv", "new": "Y" },
+		{ "name": "gzips", "folder": "gzips", "new": "N" },        
+		{ "name": "parquet", "folder": "parquet", "new": "Y" }        
+	],
+	"common": {
+		"name": "IEA",
+  		"username": "modscera",
+  		"password": "P5qPA6",
+  		"files" : [
+	  		{ "name": "SupplyDemandBalanceStocks", "url" : "http://mods.iea.org/sdbs/sdbstxt.zip" },
+	  		{ "name": "SupplyDemandBalanceStocksHistory", "url" : "http://mods.iea.org/sdbs/hsdbstxt.zip" },
+	  		{ "name": "FieldByField", "url" : "http://mods.iea.org/field/detail.zip" }
+  		]
+	},
+	"tables": [
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_FieldByField",
+		"new": "Y",
+		"inputFiles": ["detail/FIELDBY.TXT"],
+		"fields":[
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7" },
+	        { "name": "value", "type": "FLOAT8" }
+		]
+	},
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_Supply",
+		"new": "Y",
+		"inputFiles": ["sdbstxt/SUPPLY.TXT", "hsdbstxt/HSUPPLY.TXT"],
+		"fields":[
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "product", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEAProduct", "set":"p" },
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7" },
+	        { "name": "value", "type": "FLOAT8" }
+		]
+	},
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_BalancesCrude",
+		"new": "Y",
+		"inputFiles": ["sdbstxt/CRUDEDAT.TXT", "hsdbstxt/CRUDEDAT.TXT"],
+		"fields":[
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "product", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEAProduct", "set":"p" },
+	        { "name": "balance", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEABalance", "set":"b" },
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7" },
+	        { "name": "value", "type": "FLOAT8" }
+		]
+	},
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_BalancesProduct",
+		"new": "Y",
+		"inputFiles": ["sdbstxt/PRODDAT.TXT", "hsdbstxt/PRODDAT.TXT"],
+		"fields":[
+	        { "name": "product", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEAProduct", "set":"p" },
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "balance", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEABalance", "set":"b" },
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7" },
+	        { "name": "value", "type": "FLOAT8" }
+		]
+	},
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_DemandOECDDE",
+		"new": "Y",
+		"inputFiles": ["sdbstxt/OECDDE.TXT", "hsdbstxt/HOECDDE.TXT"],
+		"fields":[
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "product", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEAProduct", "set":"p" },
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7" },
+	        { "name": "value", "type": "FLOAT8" }
+		]
+	},
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_DemandNOECDDE",
+		"new": "Y",
+		"inputFiles": ["sdbstxt/NOECDDE.TXT", "hsdbstxt/HNOECDDE.TXT"],
+		"pandas_replace": {
+			"na_values": "..",
+			"processfile": "hsdbstxt/HNOECDDE.TXT",
+			"columnNames": ["c0", "c1", "c2", "c3", "c4", "c5", "c6"],
+			"usecolumnNames": ["c0", "c2", "c3"]
+		},
+		"fields":[
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7" },
+	        { "name": "value", "type": "FLOAT8" }
+		]
+	},
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_Stocks",
+		"new": "Y",
+		"inputFiles": ["sdbstxt/STOCKDAT.TXT", "hsdbstxt/STOCKDAT.TXT"],
+		"filterData": "period not like '%OLD%'",
+		"fields":[
+	        { "name": "flow", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEAFlow", "set":"f" },
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "product", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEAProduct", "set":"p" },
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7", "replace": {"oldValue": "NEW", "newValue": ""}},
+	        { "name": "value", "type": "FLOAT8" }
+		]
+	},
+	{
+		"schemaName": "energy_prod",
+		"table": "IEA_WorldOilSupplyDemand",
+		"new": "Y",
+		"inputFiles": ["sdbstxt/SUMMARY.TXT"],
+		"fields":[
+	        { "name": "country", "type": "VARCHAR", "size": "200", "CXRTable": "CRX_IEACountry", "set":"c"},
+	        { "name": "final", "type": "VARCHAR", "size": "200" },
+	        { "name": "period_type", "type": "VARCHAR", "size": "2", "computed" : "Y" },
+	        { "name": "period", "type": "VARCHAR", "size": "7" },
+	        { "name": "value", "type": "VARCHAR", "size": "100" }
+		]
+	}]
+}

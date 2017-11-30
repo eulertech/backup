@@ -1,0 +1,16 @@
+{
+	"destinationSchema": "eaa_dev",
+	"psSqlScript" : "CreateSampleResultsTablesTemplate.sql",
+	"tableName" : "Series",
+	"delimiter" : ",",
+	"bucketName" : "ihs-bda-data",
+	"fileToLoad" : "Result Analysis.xlsx",	
+	"s3SrcDirectory": "projects/Enrg_ExecutiveAffairsAuthority/SampleResults",
+  "psInfo": {
+    "dataBase": "postgres",
+    "hostName": "10.45.89.215",
+    "Port": 5432,
+    "Username": "svc_dataloader",
+    "Password": "eaa303dev"
+  }
+}

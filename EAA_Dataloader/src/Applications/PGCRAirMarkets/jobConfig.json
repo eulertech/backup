@@ -1,0 +1,14 @@
+{
+  "destinationSchema": "pgcr_dev",
+  "sqlScript": "CreateAirMarketsTablesTemplate.sql",
+  "tableName": "airmarketsFull_",
+  "bucketName": "ihs-bda-data",
+  "delimiter": ",",
+  "fileFormat": "GZIP",
+  "dateFormat": "YYYY-MM-DD",
+  "s3SrcDirectory": "/projects/Pgcr_WindDashboard/Raw/AirMarketsData/",
+  "s3ToDirectory": "/projects/Pgcr_WindDashboard/Cleaned/AirMarketsData/",
+  "inputZipFileName": "EPADownload.zip",
+  "removeLines": [1],
+  "srcFileNamePrefix": "emission"
+}

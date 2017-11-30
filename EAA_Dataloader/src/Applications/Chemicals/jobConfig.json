@@ -1,0 +1,52 @@
+{
+	"destinationSchema": "eaa_dev",
+	"bucketName" : "ihs-bda-data",
+	"s3GzipFolderBase": "/projects/Enrg_ExecutiveAffairsAuthority/Chemicals",
+    "fileFormat" : "GZIP",
+    "delimiter": "|",
+    "dateFormat" : "auto",
+    "cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" }        
+    ],
+    "tables": [{
+    		"schemaName": "eaa_dev",
+            "table": "Chemicals_working",
+            "new": "Y",
+            "type": "working",
+            "s3subfolder": "Data",
+            "fields": [
+                { "name": "ProductID", "type": "VARCHAR", "size": "10" },
+                { "name": "Product", "type": "VARCHAR", "size": "200" },
+                { "name": "LocationID", "type": "VARCHAR", "size": "10" },
+                { "name": "Location", "type": "VARCHAR", "size": "200" },
+                { "name": "Category_ID", "type": "INTEGER"},
+                { "name": "Category", "type": "VARCHAR", "size": "200" },
+                { "name": "Years", "type": "REAL" },                
+                { "name": "Value", "type": "FLOAT8" }
+            ]                
+        },
+		{
+    		"schemaName": "eaa_dev",
+            "table": "Chemicals",
+            "new": "Y",
+            "type": "destination",
+            "fields": [
+                { "name": "ProductID", "type": "VARCHAR", "size": "10" },
+                { "name": "Product", "type": "VARCHAR", "size": "200" },
+                { "name": "LocationID", "type": "VARCHAR", "size": "10" },
+                { "name": "Location", "type": "VARCHAR", "size": "200" },
+                { "name": "Category_ID", "type": "INTEGER"},
+                { "name": "Category", "type": "VARCHAR", "size": "200" },
+                { "name": "Years", "type": "REAL" },                
+                { "name": "Value", "type": "FLOAT8" }
+            ]                
+        }                
+    ],
+	"mssqlLoginInfo": "-S 10.45.88.171 -U tugboat -P trial,246 -dWASP_2016T ",
+	"bcpUtilityDirOnLinux": "/opt/mssql-tools/bin",
+	"sqlPullDataScriptTemplate" : "GetChemicalsDataTemplate.sql",
+	"sqlUpdateScript" : "UpdateChemicalsTemplate.sql"
+}

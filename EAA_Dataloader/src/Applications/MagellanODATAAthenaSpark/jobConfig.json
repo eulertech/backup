@@ -1,0 +1,63 @@
+{
+	"name": "MagellanODATAAthenaSpark",
+    "fileFormat": "GZIP",
+    "delimiter": ",",
+    "dateFormat": "auto",
+    "cleanlocal" : "N",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "raw", "folder": "raw", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" }
+    ],
+    "common": {
+		"name": "Magellan",
+		"endpoint_bkp": "http://gda-tdp-auth-02.ihs.internal.corp/uat/odata/",
+		"endpoint": "http://vwc-2stdpwb01.ihsglobal.local/DataPlatform/",
+		"ODATAbatchsize": 1000,
+		"sleepBeforeRetry": 5,
+		"maxretries": 3,
+    	"daysback": 1
+	},
+    "catalogs": [
+    	{
+	    	"name": "Magellan",
+	        "execute": "Y",
+	        "tables": [
+	        	{
+	        		"schemaName": "magellan_prod",
+	                "table": "magellan_attributes",
+	                "new": "N",
+	                "type": "attributes",
+	                "fields": [
+	                    { "name": "source_id", "type": "VARCHAR", "size": "20" },
+	                    { "name": "dri_mnemonic", "type": "VARCHAR", "size": "100" },
+	                    { "name": "start_date", "type": "VARCHAR", "size": "10" },
+	                    { "name": "end_date", "type": "VARCHAR", "size": "10" },
+	                    { "name": "base_period_value", "type": "VARCHAR", "size": "20" },
+	                    { "name": "short_label", "type": "VARCHAR", "size": "1000" },
+	                    { "name": "long_label", "type": "VARCHAR", "size": "2000" },
+	                    { "name": "explorer_label", "type": "VARCHAR", "size": "1300" },
+	                    { "name": "last_update_date", "type": "VARCHAR", "size": "10" },
+	                    { "name": "document_type", "type": "VARCHAR", "size": "20" },
+	                    { "name": "wefa_mnemonic", "type": "VARCHAR", "size": "20" },
+	                    { "name": "etl_last_update_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}
+	                ],
+	        		"sortkey":"source_id"
+	            },
+	            {
+	        		"schemaName": "magellan_prod",
+	                "table": "magellan_data",
+	                "new": "N",
+	                "type": "series",
+	                "fields": [
+	                    { "name": "source_id", "type": "VARCHAR", "size": "20" },
+	                    { "name": "date", "type": "DATE" },
+	                    { "name": "value", "type": "REAL" },
+	                    { "name": "etl_last_update_date", "type": "DATE", "isPartitioned": "Y", "athenaOnly": "Y"}
+	                ],
+	        		"sortkey":"source_id, date"                    
+	            }
+	        ]
+	    }
+	]
+}

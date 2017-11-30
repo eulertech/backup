@@ -1,0 +1,122 @@
+---
+title: "AACloudTools Quick Start Guide"
+author: "Christopher Lewis"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quick Start Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Overview of AACloudTools
+
+This package is a collection of functions which simplify the use of "Cloud resources":
+
+* Amazon S3 storage
+* Redshift database clusters
+* SNOW clusters created from AWS instances
+
+The functions in the AACloudTools package support operations such as
+
+* Copying a file stored on S3 to a local folder
+* Copying a local file to S3 storage
+* Downloading the data from a Redshift table to an R data.frame
+* Uploading data from a local data.frame to a Redshift table
+* Creating a table in Redshift
+* Starting or stopping a SNOW cluster
+
+Internally, several of these operations involve multiple steps, such as creating a connection object of sort,
+authenticating the request, copying temporary data to S3 storage or elsewhere, deleting temporary
+files etc.  The functions in the package hide all these details from the user, as most operations merely
+require invoking a single function with a few self evident parameters.
+
+Beyond this ease of use, another benefit of this package is to introduce a standard way of accessing
+cloud resources, hence resulting in easier to read and more uniform programs in regards to the access to
+Cloud resources.
+
+## Most common reasons why one fails to use the package
+
+The package relies on a configuration file, `./Config/config.json`, and an associated file,
+`redshift_username_password.json`.  These files hold the various configuration parameters of the
+"Cloud" servers and services as well as the account IDs and credentials associated with these
+resources; such parameters are either user or project specific.  These configuration files are
+stored with the source code of any project that uses AACloudTools.  However these files are 
+typically excluded from the source control, as to allow each user to keep his/her credentials private.
+
+The **absence of the configuration file**, or the **absence of a call to the `ConfigureAWS()` function**
+in the initialization section of a project are the two main causes of failure when invoking functions
+in the package.  The third reason for failure is **bad credentials**, whether due to typos in the various
+keys, to the use of credentials meant for another project, or to a corrupted json file, when one accidentally
+deletes a line or part of it while editing it.  Finally, some failures are due to **bad configuration parameters**
+such as bad Database name, typo in the hostname etc.
+
+In short: if things do not work as expected, particularly with new installations, **start by looking
+at the configuration and at the possible lack of a call to `ConfigureAWS()`**.
+
+## Getting started
+
+### Pre-requisites
+_this section needs work_
+
+* Amazon Web Services Client
+* Java run-time engine
+* JDBC driver for Redshift
+
+**Amazon Web Services Client**
+
+This is also known as **AWS CLI** (as in *Command Line Interface*). This interface is used,
+by various AACloudTools functions to access S3 storage.  Even if you don't intend to use S3
+directly, you'll probably want to install AWSCLI, as S3 is also used, behind the scene, by
+some functions such as UploadTableToRedshift.
+
+[See Amazon documentation]( https://docs.aws.amazon.com/cli/latest/userguide/installing.html#install-msi-on-windows)
+
+** Java Runtime Engine **
+[download](https://www.java.com/en/download/manual.jsp)
+
+** JDBC Driver for Redshift **
+[dowload](https://docs.aws.amazon.com/redshift/latest/mgmt/configure-jdbc-connection.html#download-jdbc-driver)
+
+
+### Installing or refreshing the package
+_this section needs work_
+
+**preparation**
+
+* Add a `Config` folder if it doesn't readily exist, just below the root of the project
+* Add a `config.json` file to this folder
+* Add a `redshift_username_password` file to this folder
+* Fill-in these configuation files.  At a minimum one needs the "S3" section.
+* Add (and edit?) `ReInstallPackage.R` to the Tools directory
+
+**actual installation/refreshing of the package**
+
+* run (source) the ReInstallPackage.R
+
+### Setting up
+* Make sure the `config.json` file and `redshift_username_password.json` files are in the `Config` folder
+* Add a call to `ConfigureAWS("./Config/config.json")` somewhere near the top / initialization section of the project
+
+### Testing basic functionality
+```
+myS3TestFile <- "s3://ihs-temp/tests/myTest123.txt"  # maybe change the name of the file, say add your initials
+myLocalFile  <- "fill-in here"                       # fill the name of some small local file
+UploadFileToS3(myLocalFile, myS3TestFile)
+DownloadFileFromS3(myS3TestFile, "SomeOtherName.txt")
+
+#verify that the "SomeOtherName.txt" file got created and contains the same as myLocalFile
+
+# clean-up: no need to keep this in S3
+RemoveFileFromS3(myS3TestFile)
+```
+
+## Getting help on specific functions
+*Work-in-progress: the Manual for this package is incomplete (but should be soon ... perfect...)*
+
+Get help on a particular function with the usual shortcut:
+
+`? function_Name` as in `? CreateTableInRedshift`
+
+Get an overview of the [currently documented] functions by looking at the [Index](../html/00Index.html) of the manual.
+

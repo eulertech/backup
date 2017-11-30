@@ -1,0 +1,33 @@
+{
+	"name": "PGCRERCOT",
+	"cleanlocal" : "Y",  
+	"folders": [
+		{ "name": "sql", "folder": "sql", "new": "Y" },
+		{ "name": "csv", "folder": "csv", "new": "Y" },
+		{ "name": "gzips", "folder": "gzips", "new": "Y" },        
+		{ "name": "parquet", "folder": "parquet", "new": "Y" }        
+	],
+	"common": {
+		"name": "PGCRERCOT",
+		"s3SrcDirectory": "s3://ihs-bda-data/projects/Pgcr_WindDashboard/ERCOT/",
+		"delimiter": ",",
+		"fileFormat": "GZIP",
+		"dateFormat": "YYYY-MM-DD"
+	},		
+	"catalogs": [{
+		"tables": [{
+			"schemaName": "pgcr_dev",
+            "FileRegex":"DAM_Hr_LMP_\\d{4}.*",
+			"SkipRows":[1],
+			"table": "ercot_DAM",
+			"new": "Y",
+			"fields": [
+				{ "name": "DeliveryDate", "type": "VARCHAR", "size": "100" },
+				{ "name": "HourEnding", "type": "VARCHAR", "size": "100" },
+				{ "name": "BusName", "type": "VARCHAR", "size": "100" },
+				{ "name": "LMP", "type": "VARCHAR", "size": "100" },
+				{ "name": "DSTFlag", "type": "VARCHAR", "size": "1" }
+			]
+		}]
+	}]
+}

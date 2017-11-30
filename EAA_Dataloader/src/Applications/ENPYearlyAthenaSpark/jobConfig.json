@@ -1,0 +1,49 @@
+{
+	"name": "ENP_Yearly",
+	"fileFormat" : "GZIP",
+	"delimiter" : ",",
+	"dateFormat" : "YYYY-MM-DDTHH:MI:SS",
+	"cleanlocal" : "Y",
+	"folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },     
+        { "name": "parquet", "folder": "parquet", "new": "Y" }        
+    ],
+	"common": {
+		"dblocation": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\OilProduction",
+		"accessdbname": "WOW_20164Q_Revised.accdb",
+		"accessTable" : "2016Q4"
+	},
+	"tables": [
+		{
+			"schemaName": "energy_prod",
+			"table": "enp_yearly",
+			"new": "Y",
+			"fields": [
+		        { "name": "Data_Level", "type": "VARCHAR", "size": "50" },
+		        { "name": "Region", "type": "VARCHAR", "size": "100" },
+		        { "name": "Country", "type": "VARCHAR", "size": "200" },
+		        { "name": "Iris_ID", "type": "FLOAT8" },
+		        { "name": "Crude_Stream", "type": "VARCHAR", "size": "100" },
+		        { "name": "Project_ID", "type": "VARCHAR", "size": "100" },
+		        { "name": "Project_Name", "type": "VARCHAR", "size": "100" },
+		        { "name": "Hydrocarbon", "type": "VARCHAR", "size": "100" },
+		        { "name": "Basin", "type": "VARCHAR", "size": "100" },
+		        { "name": "Subbasin", "type": "VARCHAR", "size": "100" },
+		        { "name": "Operator", "type": "VARCHAR", "size": "512" },
+		        { "name": "Start_Year", "type": "INTEGER" },
+		        { "name": "Terrain", "type": "VARCHAR", "size": "100" },
+		        { "name": "Sanctioned", "type": "VARCHAR", "size": "100" },
+		        { "name": "Omit", "type": "VARCHAR", "size": "100" },
+		        { "name": "Latitude_Dec_Deg", "type": "FLOAT8" },
+		        { "name": "Longitude_Dec_Deg", "type": "FLOAT8" },
+		        { "name": "BEP", "type": "FLOAT8" },
+		        { "name": "Tranches", "type": "VARCHAR", "size": "100" },
+		        { "name": "Years", "type": "FLOAT4" },
+		        { "name": "Production_Kbbl_d", "type": "FLOAT8" },
+		        { "name": "Prod_2015_2040_MMbbl", "type": "FLOAT8" },
+		        { "name": "Produced_to_date_MMbbl", "type": "VARCHAR", "size": "100" }
+		    ]
+		}
+	]	
+}

@@ -1,0 +1,19 @@
+{
+  "destinationSchema": "pgcr_dev",
+  "sqlScript": "CreateNetGenTablesTemplate.sql",
+  "tableName": "EiaNetGen_",
+  "bucketName": "ihs-bda-data",
+  "delimiter": ",",
+  "fileFormat": "GZIP",
+  "srcfileFormat": ".zip",
+  "dateFormat": "YYYY-MM-DD",
+  "s3SrcDirectory": "projects/Pgcr_WindDashboard/Raw/NetGen",
+  "s3ToDirectory": "/projects/Pgcr_WindDashboard/Cleaned/NetGen/",
+  "tableSuffix": "GrossAndNetGen",
+  "ExcelSheets": [
+	  {
+	  	"Name": "Gibbs2015grossobserved (003).xlsx",
+	  	"Sheet": "Gibbs2015gross"
+	  }  
+	]
+}

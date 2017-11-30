@@ -1,0 +1,9 @@
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN trade_date_cleaned DATE NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN transaction_begin_date_cleaned TIMESTAMP NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN transaction_end_date_cleaned TIMESTAMP NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN transaction_quantity_cleaned FLOAT NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN price_cleaned FLOAT NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN standardized_quantity_cleaned FLOAT NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN standardized_price_cleaned FLOAT NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN total_transmission_charge_cleaned FLOAT NULL;
+ALTER TABLE pgcr_dev.temp_transactions ADD COLUMN total_transaction_charge_cleaned FLOAT NULL;

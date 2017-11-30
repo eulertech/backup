@@ -1,0 +1,124 @@
+{
+	"name" : "EIA",
+	"cleanlocal" : "Y",  	
+ 	"folders": [
+	    { "name": "sql", "folder": "sql", "new": "Y" },
+	    { "name": "csv", "folder": "csv", "new": "Y" },
+	    { "name": "gzips", "folder": "gzips", "new": "Y" },        
+	    { "name": "parquet", "folder": "parquet", "new": "Y" }        
+	 ],
+ 	 "common": {
+		"name": "EIA",
+		"urlPrefix" : "http://api.eia.gov/bulk/",
+		"urlExt" : "zip",
+		"fileFormat" : "GZIP",
+		"dateFormat" : "YYYY-MM-DDTHH:MI:SS"
+ 	 },		
+	 "catalogs": [{
+		"name": "STEO",
+		"tables": [{
+			"schemaName": "energy_prod",
+			"table": "eia_steo_series_attributes",
+			"dataSet": "attributes",
+			"new": "Y",
+			"fields": [
+				{ "name": "series_id", "type": "VARCHAR", "size": "50" },
+				{ "name": "name", "type": "VARCHAR", "size": "256" },
+				{ "name": "units", "type": "VARCHAR", "size": "256" },
+				{ "name": "f", "type": "VARCHAR", "size": "2" },
+				{ "name": "copyright", "type": "VARCHAR", "size": "256" },
+				{ "name": "source", "type": "VARCHAR", "size": "256" },
+				{ "name": "geography", "type": "VARCHAR", "size": "256" },
+				{ "name": "start_date", "type": "VARCHAR", "size": "8", "validation": "start" },
+				{ "name": "end_date", "type": "VARCHAR", "size": "8", "validation": "end" },
+				{ "name": "lastHistoricalPeriod", "type": "VARCHAR", "size": "8" },
+				{ "name": "last_updated", "type": "DATE" },
+				{ "name": "description", "type": "VARCHAR", "size": "512" }
+			]
+		},
+		{
+			"schemaName": "energy_prod",
+			"table": "eia_steo_series_data",
+			"dataSet": "data",
+			"new": "Y",
+			"fields": [
+				{ "name": "series_id", "type": "VARCHAR", "size": "50" },
+				{ "name": "period", "type": "VARCHAR", "size": "50" },
+				{ "name": "value", "type": "REAL" }
+			]
+		}]
+	},
+	{
+		"name": "PET_IMPORTS",
+		"tables": [{
+			"schemaName": "energy_prod",
+			"table": "eia_pet_imports_series_attributes",
+			"dataSet": "attributes",
+			"new": "Y",
+			"fields": [
+				{ "name": "series_id", "type": "VARCHAR", "size": "50" },
+				{ "name": "name", "type": "VARCHAR", "size": "256" },
+				{ "name": "units", "type": "VARCHAR", "size": "256" },
+				{ "name": "f", "type": "VARCHAR", "size": "2" },
+				{ "name": "copyright", "type": "VARCHAR", "size": "256" },
+				{ "name": "source", "type": "VARCHAR", "size": "256" },
+				{ "name": "lat", "type": "VARCHAR", "size": "256" },
+				{ "name": "lon", "type": "VARCHAR", "size": "256" },
+				{ "name": "geography", "type": "VARCHAR", "size": "256" },
+				{ "name": "geography2", "type": "VARCHAR", "size": "256" },
+				{ "name": "start_date", "type": "VARCHAR", "size": "8", "validation": "start" },
+				{ "name": "end_date", "type": "VARCHAR", "size": "8", "validation": "end" },
+				{ "name": "last_updated", "type": "DATE" },
+				{ "name": "geoset_id", "type": "VARCHAR", "size": "256" },
+				{ "name": "latlon", "type": "VARCHAR", "size": "256" }
+			]
+		},
+		{
+			"schemaName": "energy_prod",
+			"table": "eia_pet_imports_series_data",
+			"dataSet": "data",
+			"new": "Y",
+			"fields": [
+				{ "name": "series_id", "type": "VARCHAR", "size": "50" },
+				{ "name": "period", "type": "VARCHAR", "size": "50" },
+				{ "name": "value", "type": "REAL" }
+			]
+		}]
+	},
+	{
+		"name": "PET",
+		"tables": [{
+			"schemaName": "energy_prod",
+			"table": "eia_pet_series_attributes",
+			"dataSet": "attributes",
+			"new": "Y",
+			"fields": [
+				{ "name": "series_id", "type": "VARCHAR", "size": "50" },
+				{ "name": "name", "type": "VARCHAR", "size": "256" },
+				{ "name": "units", "type": "VARCHAR", "size": "256" },
+				{ "name": "f", "type": "VARCHAR", "size": "2" },
+				{ "name": "unitsshort", "type": "VARCHAR", "size": "256" },
+				{ "name": "description", "type": "VARCHAR", "size": "512" },
+				{ "name": "copyright", "type": "VARCHAR", "size": "256" },
+				{ "name": "source", "type": "VARCHAR", "size": "256" },
+				{ "name": "geography", "type": "VARCHAR", "size": "256" },
+				{ "name": "start_date", "type": "VARCHAR", "size": "8", "validation": "start" },
+				{ "name": "end_date", "type": "VARCHAR", "size": "8", "validation": "end" },
+				{ "name": "last_updated", "type": "DATE" },
+				{ "name": "iso3166", "type": "VARCHAR", "size": "256" },
+				{ "name": "geography2", "type": "VARCHAR", "size": "256" }
+			]
+		},
+		{
+			"schemaName": "energy_prod",
+			"table": "eia_pet_series_data",
+			"dataSet": "data",
+			"new": "Y",
+			"fields": [
+				{ "name": "series_id", "type": "VARCHAR", "size": "50" },
+				{ "name": "period", "type": "VARCHAR", "size": "50" },
+				{ "name": "value", "type": "REAL" }
+			]
+		}]
+	}]
+}

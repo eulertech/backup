@@ -1,0 +1,23 @@
+{
+	"loggerPrefix" : "log",
+	"suiteTestLocationPrefix" : "_SuiteTest",
+	"validPlatforms": ["windows", "linux"],
+	"BCPUtilities" : {
+		"sqlServerloginInfo" : "-S 10.45.88.171 -U maritime -P trial,123",
+		"bcpUtilityDirOnLinux" : "/opt/mssql-tools/bin/",
+		"inputQuery" : "SELECT TOP 10 1 FROM IDDS03.dbo.series_attr",
+		"fieldTerminator" : "",
+		"rowTerminator" : ""
+	},
+	"OSUtilities" : {
+		"bcpTest_windows" : "bcp \"SELECT TOP 10 1 FROM IDDS03.dbo.series_attr\" queryout \"#fileName#\" -c -t \"\" -S 10.45.88.171 -U maritime -P trial,123",
+		"bcpTest_linux" : "/opt/mssql-tools/bin/ bcp \"SELECT TOP 10 1 FROM IDDS03.dbo.series_attr\" queryout \"#fileName#\" -c -t \"\" -S 10.45.88.171 -U maritime -P trial,123"
+	},
+	"FileUtilities" : {
+		"appToTestDir" : "JODI"
+	},
+	"S3Utilities": {
+		"testBucketName": "ihs-temp",
+        "s3TempKeyFolder": "eaa/AACloudToolsTest/temp"
+	}
+}

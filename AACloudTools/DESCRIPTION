@@ -1,0 +1,37 @@
+Package: AACloudTools
+Type: Package
+Title: Simplify the use of various cloud resources (S3 storage, Redshift, on-
+    demand clusters...)
+Version: 0.7.6
+Author: Christopher Lewis
+Maintainer: Marc Veillet <marc.veillet@ihsmarkit.com>
+Description: Collection of functions to use of various cloud resources. For
+    example... ... to store or retrieve files in S3 storage ... to query data
+    on Redshift, to download tables in Redshift etc. ... to launch on-demand AWS
+    instances and clusters ... etc.
+License: IHS Markit Proprietary logic. Cannot be dissiminated outside the
+    enterprise.
+Copyright: IHS Markit Ltd
+LazyData: TRUE
+Depends:
+    R (>= 3.2.0),
+    foreach,
+    parallel,
+    doSNOW,
+    jsonlite,
+    RJDBC,
+    data.table
+Imports:
+    stringr,
+    foreach,
+    parallel,
+    doSNOW,
+    jsonlite,
+    RJDBC,
+    data.table,
+RoxygenNote: 6.0.1
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr

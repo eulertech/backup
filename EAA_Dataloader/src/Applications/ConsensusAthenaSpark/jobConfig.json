@@ -1,0 +1,36 @@
+{
+	"name": "ConsensusAthenaSpark",
+	"srcSharedFolder": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\ConsensusEconomics",
+	"fileNamePrefix": "EM",
+	"validExts": [".xls", ".xlsx"],
+	"worksheetName": "Crude Oil - Brent",
+	"columnsToDrop": ["on Survey Date", "from spot"],
+	"dropAfterHeader": [0,1,2,3,4,5,6,7,8,9,10,11,12,13],
+    "fileFormat" : "GZIP",
+    "skipRows": 4,
+    "surveyDateRow": 4,
+    "skipFooter": 0,
+    "delimiter": ",",
+    "dateFormat" : "auto",
+  	"cleanlocal" : "Y",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "raw", "folder": "raw", "new": "Y" },
+        { "name": "parquet", "folder": "parquet", "new": "Y" } 
+    ],
+    "tables": [{
+    		"schemaName": "energy_prod",
+            "table": "consensus_economics",
+    		"loadToRedshift": "Y",            
+            "new": "Y",
+            "fields": [
+                { "name": "survey_date", "type": "DATE"},
+                { "name": "bank_name", "type": "VARCHAR", "size": "50" },
+                { "name": "forecast_date", "type": "DATE" },
+                { "name": "forecast_price", "type": "REAL" }
+            ],
+            "sortkey":"survey_date"
+        }        
+    ]
+}

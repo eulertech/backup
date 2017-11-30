@@ -1,0 +1,52 @@
+{
+	"name": "OPECAthenaSpark",
+	"cleanlocal" : "Y",
+	"srcCategories" : {
+        	"execute": "Y",
+            "srcCategory" : "calendar",
+            "srcFolder": "\\\\engdc02\\dfs\\COMMON\\LakePeople\\Energy\\Data\\OPEC",
+            "fileName": "OPEC_Calendar.xlsx",
+            "worksheetName": "OPEC",
+            "skipRows": 1,
+            "skipFooter": 4,
+            "delimiter": ",",
+            "dateFormat" : "MONYYYY"
+     },
+	"folders": [
+    	{ "name": "sql", "folder": "sql", "new": "Y" },
+    	{ "name": "csv", "folder": "csv", "new": "Y" },
+    	{ "name": "parquet", "folder": "parquet", "new": "Y" }
+	], 	
+   "tables": [{
+    		"schemaName": "energy_prod",
+            "table": "opec_calendar",
+    		"loadToRedshift": "Y",            
+            "new": "Y",
+            "fields": [
+                { "name": "idx_number", "type": "INTEGER" },
+                { "name": "effect_month", "type": "VARCHAR", "size": "20" },
+                { "name": "meeting_number", "type": "VARCHAR", "size": "10" },
+                { "name": "meeting_date", "type": "VARCHAR", "size": "100" },
+                { "name": "meeting_ending_date", "type": "VARCHAR", "size": "100" },
+                { "name": "quota", "type": "REAL" },
+                { "name": "change", "type": "REAL"},
+                { "name": "algeria", "type": "REAL" },
+                { "name": "angola", "type": "REAL"},
+                { "name": "ecuador", "type": "REAL" },
+                { "name": "indonesia", "type": "REAL" },
+                { "name": "ir", "type": "REAL" },
+                { "name": "iraq", "type": "REAL" },
+                { "name": "kuwait", "type": "REAL" },
+                { "name": "libya", "type": "REAL"},
+                { "name": "nigeria", "type": "REAL"},
+                { "name": "qatar", "type": "REAL"},
+                { "name": "saudiarabia", "type": "REAL"},
+                { "name": "uae", "type": "REAL" },
+                { "name": "venezuela", "type": "REAL"},
+                { "name": "total", "type": "REAL"},
+                { "name": "notes", "type": "VARCHAR", "size": "50" }
+            ],
+            "sortkey":"idx_number"
+        }        
+    ]
+}

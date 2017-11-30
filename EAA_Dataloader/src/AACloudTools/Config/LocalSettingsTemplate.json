@@ -1,0 +1,6 @@
+{
+  "Spark": {
+    "SPARK_HOME" : "<path to your spark  directory. e.g. - E:/SparkWindows/spark>",
+    "HADOOP_HOME": "<path to your hadoop directory. e.g. - E:/SparkWindows/hadoop>"
+  }
+}

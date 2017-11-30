@@ -1,0 +1,133 @@
+{
+	"name": "JODIAthenaSpark",
+	"delimiter": ",",
+	"cleanlocal" : "N",
+	"folders": [
+    	{ "name": "sql", "folder": "sql", "new": "Y" },
+    	{ "name": "csv", "folder": "csv", "new": "Y" },
+    	{ "name": "raw", "folder": "raw", "new": "Y" },
+    	{ "name": "parquet", "folder": "parquet", "new": "Y" }
+	],
+	"common":{
+		"name":"JODI"	
+	},    
+	"catalogs":[
+	{
+		"execute": "Y",
+		"name": "referencedata",
+		"tables": [{
+			"schemaName": "energy_prod",
+			"table": "jodi_flow",
+			"srcBucketName": "ihs-bda-data",
+			"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/JODI/references/",
+			"srcFile": "jodi_flow.xlsx",
+			"skipRows": 0,
+			"delimiter" : ",",
+    		"loadToRedshift": "Y",            
+            "new": "Y",
+            "fields": [
+                { "name": "name", "type": "VARCHAR", "size": "20" },
+                { "name": "file_table", "type": "VARCHAR", "size": "20" },
+                { "name": "full_name", "type": "VARCHAR", "size": "200" }
+            ]
+		},
+		{
+			"schemaName": "energy_prod",
+			"table": "jodi_product",
+			"srcBucketName": "ihs-bda-data",
+			"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/JODI/references/",
+			"srcFile": "jodi_product.xlsx",
+			"skipRows": 0,
+			"delimiter" : ",",
+    		"loadToRedshift": "Y",            
+            "new": "Y",
+            "fields": [
+                { "name": "name", "type": "VARCHAR", "size": "20" },
+                { "name": "file_table", "type": "VARCHAR", "size": "20" },
+                { "name": "full_name", "type": "VARCHAR", "size": "200" }
+            ]
+		},
+		{
+			"schemaName": "energy_prod",
+			"table": "jodi_qualifier",
+			"srcBucketName": "ihs-bda-data",
+			"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/JODI/references/",
+			"srcFile": "jodi_qualifier.xlsx",
+			"skipRows": 0,
+			"delimiter" : ",",
+    		"loadToRedshift": "Y",            
+            "new": "Y",
+            "fields": [
+                { "name": "code", "type": "INTEGER"},
+                { "name": "description", "type": "VARCHAR", "size": "200" }
+            ]
+		},
+		{
+			"schemaName": "energy_prod",
+			"table": "jodi_units",
+			"srcBucketName": "ihs-bda-data",
+			"srcS3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/JODI/references/",
+			"srcFile": "jodi_units.xlsx",
+			"skipRows": 0,
+			"delimiter" : ",",
+    		"loadToRedshift": "Y",            
+            "new": "Y",
+            "fields": [
+                { "name": "name", "type": "VARCHAR", "size": "20" },
+                { "name": "description", "type": "VARCHAR", "size": "200" },
+                { "name": "uom", "type": "VARCHAR", "size": "20" }
+            ]
+		}
+		]
+	},
+	{
+		"execute": "Y",
+		"name": "webcalls",
+		"tables": [{
+			"schemaName": "energy_prod",
+			"table": "jodi_primary",
+			"url": "https://www.jodidata.org/_resources/files/downloads/oil-data/world_primary_csv.zip",
+			"unzipFilename": "world_Primary_CSV.csv",
+			"delimiter" : ",",
+    		"loadToRedshift": "Y",
+    		"adjustFormat":[
+                { "name": "date", "inputFormat": "MMMyyyy" }
+    		],
+            "new": "Y",
+            "fields": [
+                { "name": "country", "type": "VARCHAR", "size": "20" },
+                { "name": "product", "type": "VARCHAR", "size": "20" },
+                { "name": "flow", "type": "VARCHAR", "size": "20" },
+                { "name": "unit", "type": "VARCHAR", "size": "20" },
+                { "name": "date", "type": "DATE" },
+                { "name": "quantity", "type": "REAL" },
+                { "name": "code", "type": "INTEGER" },
+                { "name": "Qualifier", "type": "VARCHAR", "size": "20" }
+            ]
+		},
+		{
+			"schemaName": "energy_prod",
+			"table": "jodi_secondary",
+		    "url": "https://www.jodidata.org/_resources/files/downloads/oil-data/world_secondary_csv.zip",
+			"unzipFilename": "world_Secondary_CSV.csv",
+			"delimiter" : ",",
+    		"loadToRedshift": "Y",            
+    		"adjustFormat":[
+                { "name": "date", "inputFormat": "MMMyyyy" }
+    		],
+            "new": "Y",
+            "fields": [
+                { "name": "country", "type": "VARCHAR", "size": "20" },
+                { "name": "product", "type": "VARCHAR", "size": "20" },
+                { "name": "flow", "type": "VARCHAR", "size": "20" },
+                { "name": "unit", "type": "VARCHAR", "size": "20" },
+                { "name": "date", "type": "DATE" },
+                { "name": "quantity", "type": "REAL" },
+                { "name": "code", "type": "INTEGER" },
+                { "name": "Qualifier", "type": "VARCHAR", "size": "20" }
+            ]
+		}		
+		]
+	}
+	]
+}

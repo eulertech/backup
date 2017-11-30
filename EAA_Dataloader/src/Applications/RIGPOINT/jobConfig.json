@@ -1,0 +1,22 @@
+{
+	"destinationSchema": "eaa_dev",
+	"sqlScript": "CreateTablesTemplate.sql",
+	"tableName" : "rigpoint",
+	"bucketName": "ihs-bda-data",
+	"s3DataFolder": "/projects/Enrg_ExecutiveAffairsAuthority/RIGPOINT",
+    "cleanlocal" : "Y",	
+	"reports": [
+		{
+        	"name": "utilization_monthly",
+        	"ddlScript": "CreateUtilizationMonthlyTable.sql",
+        	"fileInputExt": "xls",
+        	"fileInputPrefix": "RP_Utilization_",
+            "excelSheetName": 0,
+            "skipRows": 11,
+            "skipFooter": 1,
+            "delimiter" : ",",
+			"fileFormat" : "GZIP",
+			"dateFormat": "YYYY-MM-DD"
+        }
+	]
+}

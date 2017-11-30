@@ -1,0 +1,24 @@
+{
+	"bucketName": "ihs-temp",
+	"delimiter" : ";",
+	"dateFormat" : "YYYY-MM-DD",
+  	"cleanlocal" : "N",
+    "folders": [
+        { "name": "sql", "folder": "sql", "new": "Y" },
+        { "name": "csv", "folder": "csv", "new": "Y" },
+        { "name": "gzips", "folder": "gzips", "new": "Y" },        
+        { "name": "parquet", "folder": "parquet", "new": "Y" }        
+    ],
+	"tables": [{
+		"s3Filename" : "chris/spark/incremental_test/2017-09-30.txt",
+		"partitionValue" : "2017-09-30",
+		"schemaName": "eaa_dev",
+		"table": "cfl_incremental_test",
+		"new": "N",
+		"fields": [
+	        { "name": "text1", "type": "VARCHAR", "size": "20" },
+	        { "name": "value1", "type": "INTEGER"},
+			{ "name": "etl_run_date", "type": "DATE", "isPartitioned": "Y"}
+	    ]
+	}]
+}
